@@ -1,0 +1,613 @@
+// IBIG DocPro — Schéma de données v2.0
+// SQLite (dev) — swap DATABASE_URL vers PostgreSQL en production sans changer les modèles.
+// NB: SQLite ne supporte ni enum ni Json natif → statuts en String (valeurs documentées),
+// données structurées en String JSON (suffixe *Json).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────── UTILISATEURS & ORGANISATIONS ───────────────────────────
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  country       String? // code ISO-2 (CI, SN, CM…)
+  language      String   @default("fr")
+  role          String   @default("client") // client | agent | admin | superadmin
+  emailVerified Boolean  @default(false)
+  // Profil Utilisateur Intelligent — pré-remplissage des documents (JSON)
+  profileJson   String?
+  // Programme affilié (CDC §7.3) — commission 15%
+  referralCode  String?  @unique
+  referredById  String?
+  // 2FA TOTP (CDC §19.1 — recommandé pour le SuperAdmin)
+  totpSecret    String?
+  totpEnabled   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  orders        Order[]
+  licenses      License[]
+  transactions  Transaction[]
+  proofs        PaymentProof[]
+  documents     GeneratedDocument[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+  invoices      Invoice[]
+  cart          Cart?
+  wallet        CreditWallet?
+}
+
+model Organization {
+  id           String      @id @default(cuid())
+  name         String
+  country      String?
+  taxId        String?
+  address      String?
+  ownerId      String? // utilisateur propriétaire de l'organisation
+  // White Label (CDC §6.2) : {logoUrl, primaryColor, displayName, hideIbigBranding}
+  brandingJson String?
+  createdAt    DateTime    @default(now())
+  users        User[]
+  orders       Order[]
+  licenses     License[]
+  invites      OrgInvite[]
+}
+
+model OrgInvite {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  email          String
+  token          String       @unique @default(cuid())
+  status         String       @default("envoyee") // envoyee | acceptee | expiree | annulee
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+}
+
+// ─────────────────────────── FORFAITS & LICENCES ───────────────────────────
+
+model Plan {
+  id                 String    @id @default(cuid())
+  code               String    @unique // STARTER, PRO, ENTREPRISE, PACK_EMPLOI…
+  name               String
+  description        String?
+  active             Boolean   @default(true)
+  displayOrder       Int       @default(0)
+  // Tarification
+  price              Int // en unité mineure de la devise (FCFA sans décimales)
+  promoPrice         Int?
+  currency           String    @default("XOF")
+  promoStart         DateTime?
+  promoEnd           DateTime?
+  // Durée : type = days | months | years | perpetual
+  durationType       String    @default("months")
+  durationValue      Int       @default(1)
+  // Limites
+  maxUsers           Int       @default(1)
+  maxEntities        Int       @default(1)
+  docsPerMonth       Int? // null = illimité
+  storageMb          Int       @default(1024)
+  // Essai
+  trialDays          Int       @default(0)
+  // Config JSON : featuresJson (liste), countriesJson, paymentMethodsJson
+  featuresJson       String?
+  countriesJson      String?
+  paymentMethodsJson String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  orders   Order[]
+  licenses License[]
+}
+
+model License {
+  id                String        @id @default(cuid())
+  userId            String
+  user              User          @relation(fields: [userId], references: [id])
+  organizationId    String?
+  organization      Organization? @relation(fields: [organizationId], references: [id])
+  planId            String
+  plan              Plan          @relation(fields: [planId], references: [id])
+  orderId           String?       @unique // commande d'origine — 1 commande = 1 licence max
+  order             Order?        @relation(fields: [orderId], references: [id])
+  // essai | en_attente | provisoire | active | grace | suspendue | expiree | resiliee | revoquee
+  status            String        @default("en_attente")
+  startDate         DateTime      @default(now())
+  endDate           DateTime? // null = perpétuelle
+  graceUntil        DateTime?
+  provisionalUntil  DateTime? // activation provisoire (max 7 jours)
+  provisionalReason String?
+  suspendedReason   String?
+  revokedReason     String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  renewals LicenseEvent[]
+}
+
+// Historique immuable du cycle de vie d'une licence (jamais écrasé)
+model LicenseEvent {
+  id          String   @id @default(cuid())
+  licenseId   String
+  license     License  @relation(fields: [licenseId], references: [id])
+  type        String // activation | activation_provisoire | conversion_definitive | renouvellement | upgrade | downgrade | prolongation | suspension | reactivation | revocation | expiration | grace
+  detailsJson String?
+  actorId     String? // admin/agent ayant agi (null = système)
+  reason      String?
+  createdAt   DateTime @default(now())
+}
+
+// ─────────────────────────── COMMANDES & TRANSACTIONS ───────────────────────────
+
+model Order {
+  id             String        @id @default(cuid())
+  number         String        @unique // ex: CMD-2026-000042
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  planId         String?
+  plan           Plan?         @relation(fields: [planId], references: [id])
+  // achat à l'unité d'un document (hors abonnement)
+  documentId     String?
+  // brouillon | en_attente_paiement | paiement_en_cours | preuve_soumise | a_verifier |
+  // informations_manquantes | payee | expiree | annulee | rejetee | remboursee
+  status         String        @default("en_attente_paiement")
+  amount         Int
+  discount       Int           @default(0)
+  tax            Int           @default(0)
+  total          Int
+  currency       String        @default("XOF")
+  billingCountry String?
+  paymentMethod  String? // moneroo | mobile_money | virement_national | virement_international | transfert_international | especes
+  expiresAt      DateTime?
+  metadataJson   String? // IP, user-agent, source
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  transactions Transaction[]
+  license      License?
+  invoices     Invoice[]
+}
+
+model Transaction {
+  id             String    @id @default(cuid())
+  orderId        String
+  order          Order     @relation(fields: [orderId], references: [id])
+  userId         String
+  user           User      @relation(fields: [userId], references: [id])
+  provider       String // moneroo | orange_money | mtn_momo | wave | moov | virement | western_union | especes…
+  method         String // electronique | mobile_money_manuel | virement_national | virement_international | transfert_international | especes
+  internalRef    String    @unique // référence IBIG
+  externalRef    String? // référence fournisseur / client
+  amountExpected Int
+  amountDeclared Int?
+  amountReceived Int?
+  currency       String    @default("XOF")
+  // initialisee | en_attente | en_cours | reussie | echouee | annulee | expiree |
+  // a_verifier | validee_manuellement | rejetee | remboursee | contestee
+  status         String    @default("initialisee")
+  fees           Int       @default(0)
+  initiatedAt    DateTime  @default(now())
+  paidAt         DateTime?
+  confirmedAt    DateTime?
+  validatedById  String? // admin ayant validé manuellement
+  rejectReason   String?
+  comment        String?
+  rawPayloadJson String? // données techniques brutes
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  proofs PaymentProof[]
+}
+
+model WebhookEvent {
+  id          String    @id @default(cuid())
+  provider    String // moneroo…
+  eventId     String // identifiant unique fournisseur
+  signature   String?
+  payloadJson String // payload brut conservé pour audit
+  processed   Boolean   @default(false)
+  processedAt DateTime?
+  error       String?
+  createdAt   DateTime  @default(now())
+
+  @@unique([provider, eventId]) // idempotence — jamais retraiter le même event
+}
+
+// ─────────────────────────── PREUVES DE PAIEMENT ───────────────────────────
+
+model PaymentProof {
+  id            String      @id @default(cuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  filePath      String // stockage privé, jamais servi en URL publique directe
+  mimeType      String
+  sizeBytes     Int
+  originalName  String
+  storedName    String // UUID + timestamp
+  fileHash      String? // SHA-256 — détection de preuve dupliquée
+  // soumise | en_cours | validee | rejetee | complement_demande
+  status        String      @default("soumise")
+  adminComment  String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+// ─────────────────────────── FACTURES & REÇUS ───────────────────────────
+
+model Invoice {
+  id          String    @id @default(cuid())
+  number      String    @unique // FAC-2026-000123 / REC-…
+  type        String // facture | recu | accuse_reception | confirmation_provisoire
+  orderId     String
+  order       Order     @relation(fields: [orderId], references: [id])
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  amount      Int
+  discount    Int       @default(0)
+  tax         Int       @default(0)
+  total       Int
+  currency    String
+  periodStart DateTime?
+  periodEnd   DateTime?
+  status      String    @default("emise") // emise | annulee
+  verifyCode  String    @unique @default(cuid()) // QR / code de vérification
+  detailsJson String?
+  createdAt   DateTime  @default(now())
+}
+
+// ─────────────────────────── MOYENS DE PAIEMENT (CONFIG SUPERADMIN) ───────────────────────────
+
+model PaymentChannel {
+  id           String   @id @default(cuid())
+  // mobile_money | banque_nationale | banque_internationale | transfert_international | especes | processeur
+  type         String
+  provider     String // Orange Money, MTN MoMo, Wave, BICICI, Western Union, Moneroo…
+  label        String
+  country      String? // null = tous pays
+  currency     String   @default("XOF")
+  // coordonnées : numéro de réception / RIB / IBAN / SWIFT… (JSON)
+  detailsJson  String
+  instructions String?
+  minAmount    Int?
+  maxAmount    Int?
+  active       Boolean  @default(true)
+  displayOrder Int      @default(0)
+  plansJson    String? // codes forfaits autorisés (null = tous)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Currency {
+  code      String  @id // XOF, XAF, USD, EUR…
+  name      String
+  symbol    String
+  rateToXof Float   @default(1) // taux de référence
+  active    Boolean @default(true)
+  decimals  Int     @default(0)
+}
+
+// ─────────────────────────── ANTI-FRAUDE & AUDIT ───────────────────────────
+
+model FraudAlert {
+  id            String   @id @default(cuid())
+  transactionId String?
+  userId        String?
+  // reference_dupliquee | preuve_dupliquee | montant_incoherent | devise_incoherente |
+  // preuve_illisible | paiement_multiple | compte_recent | provisoire_repetee |
+  // expediteur_incoherent | transaction_expiree_rejouee | pays_inattendu
+  type          String
+  severity      String   @default("moyenne") // faible | moyenne | elevee
+  message       String
+  // ouverte | examinee | confirmee | ecartee — jamais de rejet automatique
+  status        String   @default("ouverte")
+  reviewedById  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  action     String // license.activate, order.reject, proof.validate, config.update…
+  entityType String
+  entityId   String
+  beforeJson String?
+  afterJson  String?
+  reason     String?
+  ip         String?
+  createdAt  DateTime @default(now())
+}
+
+// ─────────────────────────── GÉNÉRATION DOCUMENTAIRE ───────────────────────────
+
+model DocumentTemplate {
+  id            String   @id @default(cuid())
+  code          String   @unique // cv_pro, lettre_motivation, bail_residentiel…
+  name          String
+  category      String // rh_emploi | juridique_admin | commercial_financier | academique | sante | immobilier | association
+  description   String?
+  price         Int // FCFA
+  priceMax      Int?
+  currency      String   @default("XOF")
+  // questionnaire ChatDoc : liste de champs {key,label,type,required,options} (JSON)
+  fieldsJson    String
+  // corps du template avec placeholders {{champ}}
+  body          String
+  styles        String? // variantes de style (JSON)
+  countriesJson String? // adaptations légales par pays
+  // Formats disponibles au téléchargement : ["pdf","docx","pptx","xlsx"]
+  formatsJson   String   @default("[\"pdf\",\"docx\"]")
+  // Type : document | presentation | spreadsheet
+  templateType  String   @default("document")
+  classe        String   @default("B") // A | B | C
+  niveauxJson   String   @default("[\"standard\",\"pro\",\"expert\"]")
+  active        Boolean  @default(true)
+  popularity    Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  documents GeneratedDocument[]
+  cartItems CartItem[]
+}
+
+model GeneratedDocument {
+  id           String           @id @default(cuid())
+  userId       String?
+  user         User?            @relation(fields: [userId], references: [id])
+  templateId   String
+  template     DocumentTemplate @relation(fields: [templateId], references: [id])
+  title        String
+  answersJson  String // réponses au questionnaire
+  contentHtml  String // document généré
+  language     String           @default("fr")
+  country      String?
+  qualityScore Int? // score IA 0-100
+  niveau       String           @default("standard") // standard | pro | expert
+  contentJson  String? // JSON structuré produit par l'IA (architecture v2)
+  status       String           @default("apercu") // apercu | paye | telecharge
+  watermarkId  String           @unique @default(cuid()) // filigrane invisible — traçabilité
+  verifyCode   String           @unique @default(cuid()) // QR de vérification /verify
+  paid         Boolean          @default(false)
+  price        Int              @default(0)
+  currency     String           @default("XOF")
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  downloads DownloadLink[]
+}
+
+model DownloadLink {
+  id         String            @id @default(cuid())
+  documentId String
+  document   GeneratedDocument @relation(fields: [documentId], references: [id])
+  token      String            @unique @default(cuid())
+  maxUses    Int               @default(3)
+  usedCount  Int               @default(0)
+  expiresAt  DateTime // 24h après paiement
+  boundIp    String?
+  createdAt  DateTime          @default(now())
+}
+
+// ─────────────────────────── NOTIFICATIONS & TÂCHES ───────────────────────────
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id])
+  forAdmin  Boolean   @default(false)
+  channel   String    @default("interne") // interne | email | sms | whatsapp | push
+  event     String // commande_creee, paiement_reussi, preuve_recue, licence_activee, expiration_j7…
+  title     String
+  body      String
+  read      Boolean   @default(false)
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model NotificationTemplate {
+  id       String @id @default(cuid())
+  event    String
+  language String @default("fr")
+  channel  String @default("email")
+  subject  String
+  body     String
+
+  @@unique([event, language, channel])
+}
+
+model CronRun {
+  id          String   @id @default(cuid())
+  job         String // expire_orders, check_pending, trial_end, expiry_alerts, grace, suspend, provisional, report, anomalies
+  status      String   @default("ok") // ok | erreur
+  detailsJson String?
+  ranAt       DateTime @default(now())
+}
+
+// ─────────────────────────── PANIER MULTI-DOCUMENTS ───────────────────────────
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id         String           @id @default(cuid())
+  cartId     String
+  cart       Cart             @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  templateId String
+  template   DocumentTemplate @relation(fields: [templateId], references: [id])
+  createdAt  DateTime         @default(now())
+
+  @@unique([cartId, templateId])
+}
+
+model Setting {
+  key   String @id
+  value String
+}
+
+// ─────────────────────────── API PARTENAIRES ───────────────────────────
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  userId     String
+  label      String
+  keyHash    String    @unique // SHA-256 de la clé — la clé claire n'est montrée qu'une fois
+  prefix     String // 8 premiers caractères affichables (dp_live_xxxx…)
+  active     Boolean   @default(true)
+  lastUsedAt DateTime?
+  callCount  Int       @default(0)
+  createdAt  DateTime  @default(now())
+}
+
+// ─────────────────────────── ASSISTANCE FACTURATION ───────────────────────────
+
+model SupportTicket {
+  id        String   @id @default(cuid())
+  userId    String
+  subject   String
+  category  String   @default("facturation") // facturation | technique | autre
+  status    String   @default("ouvert") // ouvert | en_cours | resolu | ferme
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages TicketMessage[]
+}
+
+// ─────────────────────────── CERTIFICATION BLOCKCHAIN (CDC §21 couche 3) ───────────────────────────
+
+model BlockchainCert {
+  id         String   @id @default(cuid())
+  documentId String   @unique
+  sha256     String // hash du document certifié
+  network    String   @default("polygon") // polygon | simulation
+  txHash     String? // hash de transaction on-chain (null en mode simulation)
+  status     String   @default("simule") // simule | ancre | echec
+  fee        Int      @default(500) // FCFA
+  orderId    String? // commande de l'option certification
+  createdAt  DateTime @default(now())
+}
+
+// ─────────────────────────── AFFILIATION & MARKETPLACE (CDC §7.3) ───────────────────────────
+
+model AffiliateEarning {
+  id          String   @id @default(cuid())
+  affiliateId String // parrain
+  orderId     String   @unique // idempotence : une commission par commande
+  referredId  String // filleul
+  amount      Int // 15% du total de la commande
+  currency    String   @default("XOF")
+  status      String   @default("en_attente") // en_attente | approuvee | payee | annulee
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model TemplateSubmission {
+  id           String   @id @default(cuid())
+  authorId     String // designer indépendant
+  name         String
+  category     String
+  description  String?
+  price        Int
+  fieldsJson   String
+  body         String
+  status       String   @default("soumis") // soumis | approuve | rejete
+  reviewNote   String?
+  reviewedById String?
+  templateId   String? // DocumentTemplate créé après approbation
+  salesCount   Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model TicketMessage {
+  id        String        @id @default(cuid())
+  ticketId  String
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id])
+  authorId  String
+  fromAdmin Boolean       @default(false)
+  body      String
+  createdAt DateTime      @default(now())
+}
+
+// ─── GRILLE TARIFAIRE (CDC §5) ───────────────────────────────────────────────
+model PriceGrid {
+  id        String   @id @default(cuid())
+  classe    String // A | B | C
+  niveau    String // standard | pro | expert
+  priceFcfa Int // prix en FCFA
+  priceUsd  Int // prix en cents USD (ex: 83 = $0.83)
+  active    Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+
+  @@unique([classe, niveau])
+}
+
+// ─── PORTEFEUILLE DE CRÉDITS (CDC §6) ────────────────────────────────────────
+model CreditWallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  balance   Int      @default(0) // solde en FCFA
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions CreditTransaction[]
+}
+
+model CreditTransaction {
+  id           String       @id @default(cuid())
+  walletId     String
+  wallet       CreditWallet @relation(fields: [walletId], references: [id])
+  type         String // recharge | debit | recreditation | bonus | expiration
+  amount       Int // positif = crédit, négatif = débit
+  balanceAfter Int // solde après l'opération
+  description  String?
+  documentId   String? // lié à une génération si type=debit
+  orderId      String? // lié à une recharge si type=recharge
+  createdAt    DateTime     @default(now())
+}
+
+// ─── JOURNAL DES GÉNÉRATIONS IA (CDC §11) ────────────────────────────────────
+model GenerationLog {
+  id             String   @id @default(cuid())
+  userId         String?
+  documentId     String?
+  templateCode   String
+  classe         String // A | B | C
+  niveau         String // standard | pro | expert
+  provider       String // claude | groq
+  modelUsed      String
+  tokensIn       Int      @default(0)
+  tokensOut      Int      @default(0)
+  tokensCached   Int      @default(0)
+  costUsd        Float    @default(0)
+  costFcfa       Int      @default(0)
+  creditsDebited Int      @default(0)
+  durationMs     Int      @default(0)
+  status         String // success | error | fallback
+  schemaVersion  String   @default("v1")
+  createdAt      DateTime @default(now())
+}

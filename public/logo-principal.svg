@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 110" width="520" height="110">
+  <defs>
+    <linearGradient id="docGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1565C0"/>
+      <stop offset="100%" style="stop-color:#0D2B4E"/>
+    </linearGradient>
+    <linearGradient id="tealGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ACC1"/>
+      <stop offset="100%" style="stop-color:#00838F"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD54F"/>
+      <stop offset="100%" style="stop-color:#D4A017"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="2" dy="3" stdDeviation="4" flood-color="#0D2B4E" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- ═══ ICÔNE DOCUMENT ═══ -->
+  <!-- Corps du document -->
+  <g filter="url(#shadow)">
+    <path d="M14,8 L62,8 L78,24 L78,98 L14,98 Z" rx="4" fill="url(#docGrad)"/>
+    <!-- Coin replié -->
+    <path d="M62,8 L62,24 L78,24 Z" fill="#0A1F3A" opacity="0.6"/>
+    <path d="M62,8 L62,24 L78,24 Z" fill="#1E88E5" opacity="0.4"/>
+    <!-- Bande teal gauche -->
+    <rect x="14" y="8" width="7" height="90" rx="3" fill="url(#tealGrad)"/>
+    <!-- Lignes de texte simulées -->
+    <rect x="28" y="36" width="36" height="3.5" rx="1.75" fill="white" opacity="0.85"/>
+    <rect x="28" y="45" width="28" height="3.5" rx="1.75" fill="white" opacity="0.65"/>
+    <rect x="28" y="54" width="32" height="3.5" rx="1.75" fill="white" opacity="0.65"/>
+    <rect x="28" y="63" width="22" height="3.5" rx="1.75" fill="white" opacity="0.5"/>
+    <rect x="28" y="72" width="30" height="3.5" rx="1.75" fill="white" opacity="0.5"/>
+  </g>
+
+  <!-- ═══ ÉTOILE / SPARK IA ═══ -->
+  <!-- Étoile à 4 branches (spark IA) -->
+  <g transform="translate(66, 14)">
+    <path d="M0,-14 C0,-6 6,0 14,0 C6,0 0,6 0,14 C0,6 -6,0 -14,0 C-6,0 0,-6 0,-14 Z" fill="url(#goldGrad)"/>
+    <circle cx="0" cy="0" r="3.5" fill="#FFF8E1"/>
+  </g>
+
+  <!-- ═══ WORDMARK ═══ -->
+  <!-- "IBIG" -->
+  <text x="98" y="58" font-family="'Segoe UI', Arial, sans-serif" font-weight="800" font-size="46" fill="#0D2B4E" letter-spacing="-1">IBIG</text>
+  <!-- " Doc" -->
+  <text x="228" y="58" font-family="'Segoe UI', Arial, sans-serif" font-weight="700" font-size="46" fill="#1565C0" letter-spacing="-1"> Doc</text>
+  <!-- "Pro" avec fond teal -->
+  <rect x="354" y="18" width="82" height="46" rx="8" fill="url(#tealGrad)"/>
+  <text x="363" y="55" font-family="'Segoe UI', Arial, sans-serif" font-weight="800" font-size="38" fill="white" letter-spacing="0">Pro</text>
+
+  <!-- ═══ TAGLINE ═══ -->
+  <text x="98" y="82" font-family="'Segoe UI', Arial, sans-serif" font-weight="400" font-size="13" fill="#546E7A" letter-spacing="0.5">Vos documents professionnels, générés en secondes</text>
+
+  <!-- ═══ SÉPARATEUR ═══ -->
+  <rect x="98" y="68" width="340" height="1.5" rx="1" fill="#E0E8F0"/>
+
+  <!-- ═══ URL ═══ -->
+  <text x="98" y="98" font-family="'Segoe UI', Arial, sans-serif" font-weight="400" font-size="11.5" fill="#00838F" letter-spacing="0.3">docpro.ibigsoft.com</text>
+</svg>

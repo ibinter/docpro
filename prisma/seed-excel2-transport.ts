@@ -1,0 +1,538 @@
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+
+async function main() {
+  let created = 0, updated = 0;
+
+  const templates = [
+    // ─── 1. Suivi flotte véhicules ───────────────────────────────────────────
+    {
+      code: 'tlog_xl_001',
+      name: 'Suivi Flotte Véhicules',
+      description: 'Suivi complet de la flotte : kilométrage, consommation carburant, entretien et coût total par véhicule.',
+      category: 'transport_logistique',
+      templateType: 'excel',
+      price: 9900,
+      active: true,
+      fieldsJson: JSON.stringify([
+        { key: 'nom_entreprise',  label: 'Nom de l\'entreprise',   type: 'text' },
+        { key: 'annee',           label: 'Année',                  type: 'text' },
+        { key: 'immat_1',         label: 'Immatriculation véh. 1', type: 'text' },
+        { key: 'immat_2',         label: 'Immatriculation véh. 2', type: 'text' },
+        { key: 'immat_3',         label: 'Immatriculation véh. 3', type: 'text' },
+        { key: 'km_1',            label: 'Km parcourus véh. 1',    type: 'text' },
+        { key: 'km_2',            label: 'Km parcourus véh. 2',    type: 'text' },
+        { key: 'km_3',            label: 'Km parcourus véh. 3',    type: 'text' },
+        { key: 'litres_1',        label: 'Litres carburant véh. 1',type: 'text' },
+        { key: 'litres_2',        label: 'Litres carburant véh. 2',type: 'text' },
+        { key: 'litres_3',        label: 'Litres carburant véh. 3',type: 'text' },
+        { key: 'prix_litre',      label: 'Prix du litre (FCFA)',   type: 'text' },
+        { key: 'entretien_1',     label: 'Coût entretien véh. 1',  type: 'text' },
+        { key: 'entretien_2',     label: 'Coût entretien véh. 2',  type: 'text' },
+        { key: 'entretien_3',     label: 'Coût entretien véh. 3',  type: 'text' },
+        { key: 'periode',         label: 'Période (ex: Jan 2025)', type: 'text' },
+      ]),
+      body: JSON.stringify({
+        sheets: [
+          {
+            name: 'Flotte',
+            title: '{{nom_entreprise}} — Suivi Flotte {{annee}}',
+            colorHeader: 'E65100',
+            headers: ['Véhicule', 'Immat.', 'Km parcourus', 'Carburant (L)', 'Coût carburant', 'Entretien', 'Coût total'],
+            rows: [
+              ['Camion 1', '{{immat_1}}', '{{km_1}}', '{{litres_1}}', '=D{r}*{{prix_litre}}', '{{entretien_1}}', '=E{r}+F{r}'],
+              ['Camion 2', '{{immat_2}}', '{{km_2}}', '{{litres_2}}', '=D{r}*{{prix_litre}}', '{{entretien_2}}', '=E{r}+F{r}'],
+              ['Camion 3', '{{immat_3}}', '{{km_3}}', '{{litres_3}}', '=D{r}*{{prix_litre}}', '{{entretien_3}}', '=E{r}+F{r}'],
+            ],
+            totalsRow: true,
+            colWidths: [20, 14, 14, 14, 16, 14, 16],
+          },
+          {
+            name: 'Résumé',
+            title: 'Résumé — {{periode}}',
+            colorHeader: 'BF360C',
+            headers: ['Indicateur', 'Valeur'],
+            rows: [
+              ['Total km parcourus', '=Flotte!C2+Flotte!C3+Flotte!C4'],
+              ['Total carburant (L)', '=Flotte!D2+Flotte!D3+Flotte!D4'],
+              ['Total coût carburant', '=Flotte!E2+Flotte!E3+Flotte!E4'],
+              ['Total entretien', '=Flotte!F2+Flotte!F3+Flotte!F4'],
+              ['Coût total flotte', '=Flotte!G2+Flotte!G3+Flotte!G4'],
+            ],
+            totalsRow: false,
+            colWidths: [30, 20],
+          },
+        ],
+      }),
+    },
+
+    // ─── 2. Plan de livraisons et tournées ───────────────────────────────────
+    {
+      code: 'tlog_xl_002',
+      name: 'Plan de Livraisons et Tournées',
+      description: 'Planification des tournées de livraison : clients, adresses, créneaux horaires, statuts et kilomètres par tournée.',
+      category: 'transport_logistique',
+      templateType: 'excel',
+      price: 7500,
+      active: true,
+      fieldsJson: JSON.stringify([
+        { key: 'nom_entreprise',    label: 'Nom de l\'entreprise',    type: 'text' },
+        { key: 'date_semaine',      label: 'Semaine du (date)',        type: 'date' },
+        { key: 'responsable',       label: 'Responsable logistique',   type: 'text' },
+        { key: 'zone_1',            label: 'Zone tournée 1',           type: 'text' },
+        { key: 'zone_2',            label: 'Zone tournée 2',           type: 'text' },
+        { key: 'zone_3',            label: 'Zone tournée 3',           type: 'text' },
+        { key: 'chauffeur_1',       label: 'Chauffeur tournée 1',      type: 'text' },
+        { key: 'chauffeur_2',       label: 'Chauffeur tournée 2',      type: 'text' },
+        { key: 'chauffeur_3',       label: 'Chauffeur tournée 3',      type: 'text' },
+        { key: 'vehicule_1',        label: 'Véhicule tournée 1',       type: 'text' },
+        { key: 'vehicule_2',        label: 'Véhicule tournée 2',       type: 'text' },
+        { key: 'vehicule_3',        label: 'Véhicule tournée 3',       type: 'text' },
+        { key: 'nb_clients_1',      label: 'Nb clients zone 1',        type: 'text' },
+        { key: 'nb_clients_2',      label: 'Nb clients zone 2',        type: 'text' },
+        { key: 'nb_clients_3',      label: 'Nb clients zone 3',        type: 'text' },
+        { key: 'km_tournee_1',      label: 'Km prévus tournée 1',      type: 'text' },
+        { key: 'km_tournee_2',      label: 'Km prévus tournée 2',      type: 'text' },
+        { key: 'km_tournee_3',      label: 'Km prévus tournée 3',      type: 'text' },
+      ]),
+      body: JSON.stringify({
+        sheets: [
+          {
+            name: 'Tournées',
+            title: '{{nom_entreprise}} — Livraisons semaine du {{date_semaine}}',
+            colorHeader: '1565C0',
+            headers: ['Tournée', 'Zone', 'Chauffeur', 'Véhicule', 'Nb clients', 'Km prévus', 'Départ prévu', 'Retour prévu', 'Statut'],
+            rows: [
+              ['Tournée 1', '{{zone_1}}', '{{chauffeur_1}}', '{{vehicule_1}}', '{{nb_clients_1}}', '{{km_tournee_1}}', '07:00', '13:00', 'Planifiée'],
+              ['Tournée 2', '{{zone_2}}', '{{chauffeur_2}}', '{{vehicule_2}}', '{{nb_clients_2}}', '{{km_tournee_2}}', '07:30', '14:00', 'Planifiée'],
+              ['Tournée 3', '{{zone_3}}', '{{chauffeur_3}}', '{{vehicule_3}}', '{{nb_clients_3}}', '{{km_tournee_3}}', '08:00', '15:00', 'Planifiée'],
+            ],
+            totalsRow: true,
+            colWidths: [14, 18, 20, 16, 12, 12, 14, 14, 14],
+          },
+          {
+            name: 'Détail Livraisons',
+            title: 'Détail des points de livraison — {{responsable}}',
+            colorHeader: '0D47A1',
+            headers: ['N° BL', 'Client', 'Adresse', 'Téléphone', 'Colis', 'Poids (kg)', 'Tournée', 'Heure prévue', 'Statut', 'Observations'],
+            rows: [
+              ['BL-001', '', '', '', '', '', 'Tournée 1', '', 'À livrer', ''],
+              ['BL-002', '', '', '', '', '', 'Tournée 1', '', 'À livrer', ''],
+              ['BL-003', '', '', '', '', '', 'Tournée 2', '', 'À livrer', ''],
+              ['BL-004', '', '', '', '', '', 'Tournée 2', '', 'À livrer', ''],
+              ['BL-005', '', '', '', '', '', 'Tournée 3', '', 'À livrer', ''],
+            ],
+            totalsRow: false,
+            colWidths: [10, 22, 30, 14, 10, 12, 12, 14, 12, 20],
+          },
+        ],
+      }),
+    },
+
+    // ─── 3. Tableau de bord logistique KPI ───────────────────────────────────
+    {
+      code: 'tlog_xl_003',
+      name: 'Tableau de Bord Logistique KPI',
+      description: 'Dashboard Excel des KPI logistiques : taux de service, délais, coûts, productivité et indicateurs de performance mensuelle.',
+      category: 'transport_logistique',
+      templateType: 'excel',
+      price: 14500,
+      active: true,
+      fieldsJson: JSON.stringify([
+        { key: 'nom_entreprise',       label: 'Nom de l\'entreprise',        type: 'text' },
+        { key: 'mois',                 label: 'Mois de reporting',            type: 'text' },
+        { key: 'annee',                label: 'Année',                        type: 'text' },
+        { key: 'directeur_logistique', label: 'Directeur logistique',         type: 'text' },
+        { key: 'livraisons_prevues',   label: 'Livraisons prévues',           type: 'text' },
+        { key: 'livraisons_realisees', label: 'Livraisons réalisées',         type: 'text' },
+        { key: 'livraisons_a_temps',   label: 'Livraisons à temps',           type: 'text' },
+        { key: 'km_total',             label: 'Km total parcourus',           type: 'text' },
+        { key: 'cout_transport_total', label: 'Coût transport total (FCFA)',  type: 'text' },
+        { key: 'nb_incidents',         label: 'Nombre d\'incidents',          type: 'text' },
+        { key: 'retours_clients',      label: 'Retours clients',              type: 'text' },
+        { key: 'objectif_taux_service',label: 'Objectif taux de service (%)', type: 'text' },
+      ]),
+      body: JSON.stringify({
+        sheets: [
+          {
+            name: 'KPI Dashboard',
+            title: '{{nom_entreprise}} — Tableau de Bord Logistique {{mois}} {{annee}}',
+            colorHeader: '2E7D32',
+            headers: ['Indicateur', 'Objectif', 'Réalisé', 'Écart', 'Statut'],
+            rows: [
+              ['Taux de service (%)', '{{objectif_taux_service}}', '=C3/B3*100', '=C3-B3', '=IF(D3>=0,"✓ Atteint","✗ Non atteint")'],
+              ['Livraisons prévues', '{{livraisons_prevues}}', '{{livraisons_realisees}}', '=C4-B4', '=IF(D4>=0,"✓ OK","✗ Écart")'],
+              ['Livraisons à temps', '{{livraisons_realisees}}', '{{livraisons_a_temps}}', '=C5-B5', '=IF(D5>=0,"✓ OK","✗ Retards")'],
+              ['Km parcourus', '—', '{{km_total}}', '—', '—'],
+              ['Coût transport (FCFA)', '—', '{{cout_transport_total}}', '—', '—'],
+              ['Coût par km (FCFA)', '—', '=C8/C7', '—', '—'],
+              ['Incidents signalés', '0', '{{nb_incidents}}', '=C9-B9', '=IF(C9=0,"✓ OK","⚠ Incidents")'],
+              ['Retours clients', '0', '{{retours_clients}}', '=C10-B10', '=IF(C10=0,"✓ OK","⚠ Retours")'],
+            ],
+            totalsRow: false,
+            colWidths: [32, 18, 18, 14, 18],
+          },
+          {
+            name: 'Évolution Mensuelle',
+            title: 'Évolution des KPI — {{annee}}',
+            colorHeader: '1B5E20',
+            headers: ['Mois', 'Livraisons', 'Taux service %', 'Km total', 'Coût total', 'Incidents', 'Retours'],
+            rows: [
+              ['Janvier', '', '', '', '', '', ''],
+              ['Février', '', '', '', '', '', ''],
+              ['Mars', '', '', '', '', '', ''],
+              ['Avril', '', '', '', '', '', ''],
+              ['Mai', '', '', '', '', '', ''],
+              ['Juin', '', '', '', '', '', ''],
+              ['Juillet', '', '', '', '', '', ''],
+              ['Août', '', '', '', '', '', ''],
+              ['Septembre', '', '', '', '', '', ''],
+              ['Octobre', '', '', '', '', '', ''],
+              ['Novembre', '', '', '', '', '', ''],
+              ['Décembre', '', '', '', '', '', ''],
+            ],
+            totalsRow: true,
+            colWidths: [14, 14, 16, 14, 16, 12, 12],
+          },
+        ],
+      }),
+    },
+
+    // ─── 4. Suivi des coûts de transport par trajet ───────────────────────────
+    {
+      code: 'tlog_xl_004',
+      name: 'Suivi des Coûts de Transport par Trajet',
+      description: 'Analyse détaillée des coûts par trajet : carburant, péages, chauffeur, amortissement et coût total par km.',
+      category: 'transport_logistique',
+      templateType: 'excel',
+      price: 8500,
+      active: true,
+      fieldsJson: JSON.stringify([
+        { key: 'nom_entreprise',    label: 'Nom de l\'entreprise',    type: 'text' },
+        { key: 'periode',           label: 'Période',                  type: 'text' },
+        { key: 'taux_amort_km',     label: 'Amortissement / km (FCFA)',type: 'text' },
+        { key: 'salaire_jour',      label: 'Salaire chauffeur / jour', type: 'text' },
+        { key: 'prix_litre',        label: 'Prix litre carburant',     type: 'text' },
+        { key: 'origine_1',         label: 'Origine trajet 1',         type: 'text' },
+        { key: 'destination_1',     label: 'Destination trajet 1',     type: 'text' },
+        { key: 'km_trajet_1',       label: 'Distance trajet 1 (km)',   type: 'text' },
+        { key: 'conso_100km',       label: 'Consommation aux 100 km',  type: 'text' },
+        { key: 'peage_1',           label: 'Péages trajet 1 (FCFA)',   type: 'text' },
+        { key: 'duree_jours_1',     label: 'Durée trajet 1 (jours)',   type: 'text' },
+        { key: 'origine_2',         label: 'Origine trajet 2',         type: 'text' },
+        { key: 'destination_2',     label: 'Destination trajet 2',     type: 'text' },
+        { key: 'km_trajet_2',       label: 'Distance trajet 2 (km)',   type: 'text' },
+        { key: 'peage_2',           label: 'Péages trajet 2 (FCFA)',   type: 'text' },
+        { key: 'duree_jours_2',     label: 'Durée trajet 2 (jours)',   type: 'text' },
+      ]),
+      body: JSON.stringify({
+        sheets: [
+          {
+            name: 'Coûts Trajets',
+            title: '{{nom_entreprise}} — Coûts Transport par Trajet — {{periode}}',
+            colorHeader: '6A1B9A',
+            headers: ['Trajet', 'Origine', 'Destination', 'Km', 'Carburant (L)', 'Coût carburant', 'Péages', 'Chauffeur', 'Amortissement', 'Coût total', 'Coût/km'],
+            rows: [
+              ['Trajet 1', '{{origine_1}}', '{{destination_1}}', '{{km_trajet_1}}', '=D{r}*{{conso_100km}}/100', '=E{r}*{{prix_litre}}', '{{peage_1}}', '={{duree_jours_1}}*{{salaire_jour}}', '=D{r}*{{taux_amort_km}}', '=F{r}+G{r}+H{r}+I{r}', '=J{r}/D{r}'],
+              ['Trajet 2', '{{origine_2}}', '{{destination_2}}', '{{km_trajet_2}}', '=D{r}*{{conso_100km}}/100', '=E{r}*{{prix_litre}}', '{{peage_2}}', '={{duree_jours_2}}*{{salaire_jour}}', '=D{r}*{{taux_amort_km}}', '=F{r}+G{r}+H{r}+I{r}', '=J{r}/D{r}'],
+            ],
+            totalsRow: true,
+            colWidths: [12, 18, 18, 10, 14, 16, 12, 14, 16, 14, 10],
+          },
+          {
+            name: 'Paramètres',
+            title: 'Paramètres de calcul',
+            colorHeader: '4A148C',
+            headers: ['Paramètre', 'Valeur', 'Unité'],
+            rows: [
+              ['Prix litre carburant', '{{prix_litre}}', 'FCFA/L'],
+              ['Consommation', '{{conso_100km}}', 'L/100km'],
+              ['Amortissement', '{{taux_amort_km}}', 'FCFA/km'],
+              ['Salaire chauffeur', '{{salaire_jour}}', 'FCFA/jour'],
+            ],
+            totalsRow: false,
+            colWidths: [28, 16, 14],
+          },
+        ],
+      }),
+    },
+
+    // ─── 5. Gestion des stocks entrepôt (WMS simplifié) ───────────────────────
+    {
+      code: 'tlog_xl_005',
+      name: 'Gestion des Stocks Entrepôt (WMS Simplifié)',
+      description: 'Suivi des stocks en entrepôt : références, emplacements, entrées/sorties, stock disponible et alertes de réapprovisionnement.',
+      category: 'transport_logistique',
+      templateType: 'excel',
+      price: 13000,
+      active: true,
+      fieldsJson: JSON.stringify([
+        { key: 'nom_entreprise',    label: 'Nom de l\'entreprise',     type: 'text' },
+        { key: 'nom_entrepot',      label: 'Nom de l\'entrepôt',       type: 'text' },
+        { key: 'responsable_stock', label: 'Responsable stocks',       type: 'text' },
+        { key: 'date_inventaire',   label: 'Date inventaire',          type: 'date' },
+        { key: 'ref_1',             label: 'Référence produit 1',      type: 'text' },
+        { key: 'designation_1',     label: 'Désignation produit 1',    type: 'text' },
+        { key: 'stock_initial_1',   label: 'Stock initial produit 1',  type: 'text' },
+        { key: 'seuil_alerte_1',    label: 'Seuil alerte produit 1',   type: 'text' },
+        { key: 'ref_2',             label: 'Référence produit 2',      type: 'text' },
+        { key: 'designation_2',     label: 'Désignation produit 2',    type: 'text' },
+        { key: 'stock_initial_2',   label: 'Stock initial produit 2',  type: 'text' },
+        { key: 'seuil_alerte_2',    label: 'Seuil alerte produit 2',   type: 'text' },
+        { key: 'ref_3',             label: 'Référence produit 3',      type: 'text' },
+        { key: 'designation_3',     label: 'Désignation produit 3',    type: 'text' },
+        { key: 'stock_initial_3',   label: 'Stock initial produit 3',  type: 'text' },
+        { key: 'seuil_alerte_3',    label: 'Seuil alerte produit 3',   type: 'text' },
+        { key: 'unite',             label: 'Unité de mesure',          type: 'text' },
+      ]),
+      body: JSON.stringify({
+        sheets: [
+          {
+            name: 'Stock Actuel',
+            title: '{{nom_entreprise}} — {{nom_entrepot}} — Stocks au {{date_inventaire}}',
+            colorHeader: '00695C',
+            headers: ['Référence', 'Désignation', 'Emplacement', 'Unité', 'Stock initial', 'Entrées', 'Sorties', 'Stock dispo', 'Seuil alerte', 'Statut'],
+            rows: [
+              ['{{ref_1}}', '{{designation_1}}', 'A-01', '{{unite}}', '{{stock_initial_1}}', '0', '0', '=E{r}+F{r}-G{r}', '{{seuil_alerte_1}}', '=IF(H{r}<=I{r},"⚠ RÉAPPRO","✓ OK")'],
+              ['{{ref_2}}', '{{designation_2}}', 'A-02', '{{unite}}', '{{stock_initial_2}}', '0', '0', '=E{r}+F{r}-G{r}', '{{seuil_alerte_2}}', '=IF(H{r}<=I{r},"⚠ RÉAPPRO","✓ OK")'],
+              ['{{ref_3}}', '{{designation_3}}', 'B-01', '{{unite}}', '{{stock_initial_3}}', '0', '0', '=E{r}+F{r}-G{r}', '{{seuil_alerte_3}}', '=IF(H{r}<=I{r},"⚠ RÉAPPRO","✓ OK")'],
+            ],
+            totalsRow: true,
+            colWidths: [14, 28, 14, 10, 14, 10, 10, 14, 14, 16],
+          },
+          {
+            name: 'Mouvements',
+            title: 'Journal des mouvements — {{responsable_stock}}',
+            colorHeader: '004D40',
+            headers: ['Date', 'Référence', 'Désignation', 'Type', 'Quantité', 'N° BL/BR', 'Opérateur', 'Observations'],
+            rows: [
+              ['{{date_inventaire}}', '', '', 'Inventaire', '', '', '{{responsable_stock}}', 'Stock d\'ouverture'],
+            ],
+            totalsRow: false,
+            colWidths: [14, 14, 28, 12, 12, 14, 18, 24],
+          },
+        ],
+      }),
+    },
+
+    // ─── 6. Suivi des douanes et formalités import/export ─────────────────────
+    {
+      code: 'tlog_xl_006',
+      name: 'Suivi Douanes et Formalités Import/Export',
+      description: 'Tableau de suivi des opérations douanières : déclarations, droits, taxes, documents requis et statut de dédouanement.',
+      category: 'transport_logistique',
+      templateType: 'excel',
+      price: 16500,
+      active: true,
+      fieldsJson: JSON.stringify([
+        { key: 'nom_entreprise',     label: 'Nom de l\'entreprise',       type: 'text' },
+        { key: 'pays_origine',       label: 'Pays d\'origine',            type: 'text' },
+        { key: 'pays_destination',   label: 'Pays de destination',        type: 'text' },
+        { key: 'transitaire',        label: 'Transitaire / Agence',       type: 'text' },
+        { key: 'num_declaration_1',  label: 'N° déclaration 1',           type: 'text' },
+        { key: 'date_declaration_1', label: 'Date déclaration 1',         type: 'date' },
+        { key: 'description_1',      label: 'Description marchandise 1',  type: 'text' },
+        { key: 'valeur_fob_1',       label: 'Valeur FOB 1 (FCFA)',        type: 'text' },
+        { key: 'droits_douane_1',    label: 'Droits de douane 1 (FCFA)',  type: 'text' },
+        { key: 'tva_import_1',       label: 'TVA import 1 (FCFA)',        type: 'text' },
+        { key: 'num_declaration_2',  label: 'N° déclaration 2',           type: 'text' },
+        { key: 'date_declaration_2', label: 'Date déclaration 2',         type: 'date' },
+        { key: 'description_2',      label: 'Description marchandise 2',  type: 'text' },
+        { key: 'valeur_fob_2',       label: 'Valeur FOB 2 (FCFA)',        type: 'text' },
+        { key: 'droits_douane_2',    label: 'Droits de douane 2 (FCFA)',  type: 'text' },
+        { key: 'tva_import_2',       label: 'TVA import 2 (FCFA)',        type: 'text' },
+        { key: 'annee',              label: 'Année',                      type: 'text' },
+      ]),
+      body: JSON.stringify({
+        sheets: [
+          {
+            name: 'Dossiers Douane',
+            title: '{{nom_entreprise}} — Suivi Douanes {{pays_origine}} ↔ {{pays_destination}} — {{annee}}',
+            colorHeader: 'B71C1C',
+            headers: ['N° Déclaration', 'Date', 'Description', 'Valeur FOB', 'Droits douane', 'TVA import', 'Autres frais', 'Total charges', 'Statut', 'Date mainlevée'],
+            rows: [
+              ['{{num_declaration_1}}', '{{date_declaration_1}}', '{{description_1}}', '{{valeur_fob_1}}', '{{droits_douane_1}}', '{{tva_import_1}}', '0', '=E{r}+F{r}+G{r}', 'En cours', ''],
+              ['{{num_declaration_2}}', '{{date_declaration_2}}', '{{description_2}}', '{{valeur_fob_2}}', '{{droits_douane_2}}', '{{tva_import_2}}', '0', '=E{r}+F{r}+G{r}', 'En cours', ''],
+            ],
+            totalsRow: true,
+            colWidths: [18, 14, 28, 16, 16, 14, 14, 16, 14, 16],
+          },
+          {
+            name: 'Documents',
+            title: 'Suivi Documents — {{transitaire}}',
+            colorHeader: '7F0000',
+            headers: ['N° Dossier', 'Document', 'Requis', 'Reçu', 'Date réception', 'Observations'],
+            rows: [
+              ['{{num_declaration_1}}', 'Facture commerciale', 'Oui', 'Non', '', ''],
+              ['{{num_declaration_1}}', 'Connaissement (B/L)', 'Oui', 'Non', '', ''],
+              ['{{num_declaration_1}}', 'Certificat d\'origine', 'Oui', 'Non', '', ''],
+              ['{{num_declaration_1}}', 'Liste de colisage', 'Oui', 'Non', '', ''],
+              ['{{num_declaration_1}}', 'Certificat phytosanitaire', 'Selon produit', 'Non', '', ''],
+              ['{{num_declaration_2}}', 'Facture commerciale', 'Oui', 'Non', '', ''],
+              ['{{num_declaration_2}}', 'Connaissement (B/L)', 'Oui', 'Non', '', ''],
+              ['{{num_declaration_2}}', 'Certificat d\'origine', 'Oui', 'Non', '', ''],
+            ],
+            totalsRow: false,
+            colWidths: [18, 26, 14, 10, 16, 24],
+          },
+        ],
+      }),
+    },
+
+    // ─── 7. Planning chauffeurs et disponibilités ─────────────────────────────
+    {
+      code: 'tlog_xl_007',
+      name: 'Planning Chauffeurs et Disponibilités',
+      description: 'Gestion du planning hebdomadaire des chauffeurs : affectations, congés, heures travaillées, permis et visites médicales.',
+      category: 'transport_logistique',
+      templateType: 'excel',
+      price: 6500,
+      active: true,
+      fieldsJson: JSON.stringify([
+        { key: 'nom_entreprise',     label: 'Nom de l\'entreprise',    type: 'text' },
+        { key: 'semaine',            label: 'Numéro de semaine',       type: 'text' },
+        { key: 'date_lundi',         label: 'Date du lundi',           type: 'date' },
+        { key: 'chauffeur_1_nom',    label: 'Chauffeur 1 — Nom',       type: 'text' },
+        { key: 'chauffeur_1_permis', label: 'Chauffeur 1 — N° permis', type: 'text' },
+        { key: 'chauffeur_1_expiry', label: 'Chauffeur 1 — Expiry permis', type: 'date' },
+        { key: 'chauffeur_2_nom',    label: 'Chauffeur 2 — Nom',       type: 'text' },
+        { key: 'chauffeur_2_permis', label: 'Chauffeur 2 — N° permis', type: 'text' },
+        { key: 'chauffeur_2_expiry', label: 'Chauffeur 2 — Expiry permis', type: 'date' },
+        { key: 'chauffeur_3_nom',    label: 'Chauffeur 3 — Nom',       type: 'text' },
+        { key: 'chauffeur_3_permis', label: 'Chauffeur 3 — N° permis', type: 'text' },
+        { key: 'chauffeur_3_expiry', label: 'Chauffeur 3 — Expiry permis', type: 'date' },
+        { key: 'chauffeur_4_nom',    label: 'Chauffeur 4 — Nom',       type: 'text' },
+        { key: 'chauffeur_4_permis', label: 'Chauffeur 4 — N° permis', type: 'text' },
+        { key: 'chauffeur_4_expiry', label: 'Chauffeur 4 — Expiry permis', type: 'date' },
+        { key: 'responsable_rh',     label: 'Responsable RH',          type: 'text' },
+      ]),
+      body: JSON.stringify({
+        sheets: [
+          {
+            name: 'Planning Semaine',
+            title: '{{nom_entreprise}} — Planning Chauffeurs — Semaine {{semaine}} ({{date_lundi}})',
+            colorHeader: 'E65100',
+            headers: ['Chauffeur', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche', 'Total H', 'Statut'],
+            rows: [
+              ['{{chauffeur_1_nom}}', 'Dispo', 'Dispo', 'Dispo', 'Dispo', 'Dispo', 'Repos', 'Repos', '5j', '✓ Actif'],
+              ['{{chauffeur_2_nom}}', 'Dispo', 'Dispo', 'Dispo', 'Dispo', 'Dispo', 'Repos', 'Repos', '5j', '✓ Actif'],
+              ['{{chauffeur_3_nom}}', 'Congé', 'Congé', 'Dispo', 'Dispo', 'Dispo', 'Repos', 'Repos', '3j', '⚠ Congé'],
+              ['{{chauffeur_4_nom}}', 'Dispo', 'Dispo', 'Dispo', 'Repos', 'Repos', 'Repos', 'Repos', '3j', '✓ Actif'],
+            ],
+            totalsRow: false,
+            colWidths: [22, 10, 10, 12, 10, 10, 10, 12, 10, 12],
+          },
+          {
+            name: 'Fiches Chauffeurs',
+            title: 'Registre Chauffeurs — {{responsable_rh}}',
+            colorHeader: 'BF360C',
+            headers: ['Nom', 'N° Permis', 'Catégorie', 'Expiry permis', 'Visite médicale', 'Alerte permis', 'Affectation véhicule', 'Téléphone'],
+            rows: [
+              ['{{chauffeur_1_nom}}', '{{chauffeur_1_permis}}', 'C/CE', '{{chauffeur_1_expiry}}', '', '=IF(TODAY()>DATEVALUE(D2)-90,"⚠ RENOUVELER","✓ OK")', '', ''],
+              ['{{chauffeur_2_nom}}', '{{chauffeur_2_permis}}', 'C/CE', '{{chauffeur_2_expiry}}', '', '=IF(TODAY()>DATEVALUE(D3)-90,"⚠ RENOUVELER","✓ OK")', '', ''],
+              ['{{chauffeur_3_nom}}', '{{chauffeur_3_permis}}', 'C',    '{{chauffeur_3_expiry}}', '', '=IF(TODAY()>DATEVALUE(D4)-90,"⚠ RENOUVELER","✓ OK")', '', ''],
+              ['{{chauffeur_4_nom}}', '{{chauffeur_4_permis}}', 'B/C',  '{{chauffeur_4_expiry}}', '', '=IF(TODAY()>DATEVALUE(D5)-90,"⚠ RENOUVELER","✓ OK")', '', ''],
+            ],
+            totalsRow: false,
+            colWidths: [22, 16, 12, 16, 16, 18, 20, 16],
+          },
+        ],
+      }),
+    },
+
+    // ─── 8. Analyse coût/km par véhicule ─────────────────────────────────────
+    {
+      code: 'tlog_xl_008',
+      name: 'Analyse Coût/Km par Véhicule',
+      description: 'Analyse comparative du coût au kilomètre par véhicule : charges fixes, charges variables, rentabilité et recommandations de renouvellement.',
+      category: 'transport_logistique',
+      templateType: 'excel',
+      price: 11000,
+      active: true,
+      fieldsJson: JSON.stringify([
+        { key: 'nom_entreprise',     label: 'Nom de l\'entreprise',         type: 'text' },
+        { key: 'annee',              label: 'Année d\'analyse',             type: 'text' },
+        { key: 'immat_v1',           label: 'Immat. véhicule 1',            type: 'text' },
+        { key: 'modele_v1',          label: 'Modèle véhicule 1',            type: 'text' },
+        { key: 'annee_achat_v1',     label: 'Année d\'achat véhicule 1',    type: 'text' },
+        { key: 'valeur_achat_v1',    label: 'Valeur d\'achat véh. 1 (FCFA)',type: 'text' },
+        { key: 'km_annuel_v1',       label: 'Km annuels véhicule 1',        type: 'text' },
+        { key: 'immat_v2',           label: 'Immat. véhicule 2',            type: 'text' },
+        { key: 'modele_v2',          label: 'Modèle véhicule 2',            type: 'text' },
+        { key: 'annee_achat_v2',     label: 'Année d\'achat véhicule 2',    type: 'text' },
+        { key: 'valeur_achat_v2',    label: 'Valeur d\'achat véh. 2 (FCFA)',type: 'text' },
+        { key: 'km_annuel_v2',       label: 'Km annuels véhicule 2',        type: 'text' },
+        { key: 'immat_v3',           label: 'Immat. véhicule 3',            type: 'text' },
+        { key: 'modele_v3',          label: 'Modèle véhicule 3',            type: 'text' },
+        { key: 'annee_achat_v3',     label: 'Année d\'achat véhicule 3',    type: 'text' },
+        { key: 'valeur_achat_v3',    label: 'Valeur d\'achat véh. 3 (FCFA)',type: 'text' },
+        { key: 'km_annuel_v3',       label: 'Km annuels véhicule 3',        type: 'text' },
+        { key: 'prix_litre',         label: 'Prix litre carburant (FCFA)',   type: 'text' },
+        { key: 'conso_100km',        label: 'Consommation aux 100km (L)',    type: 'text' },
+        { key: 'duree_amort_ans',    label: 'Durée amortissement (ans)',     type: 'text' },
+      ]),
+      body: JSON.stringify({
+        sheets: [
+          {
+            name: 'Coût-Km Comparatif',
+            title: '{{nom_entreprise}} — Analyse Coût/Km par Véhicule — {{annee}}',
+            colorHeader: '1A237E',
+            headers: ['Véhicule', 'Modèle', 'Immat.', 'Année achat', 'Km annuels', 'Amort./km', 'Carburant/km', 'Entretien/km', 'Assurance/km', 'Coût total/km', 'Classement'],
+            rows: [
+              ['Véhicule 1', '{{modele_v1}}', '{{immat_v1}}', '{{annee_achat_v1}}', '{{km_annuel_v1}}', '={{valeur_achat_v1}}/({{duree_amort_ans}}*{{km_annuel_v1}})', '={{conso_100km}}/100*{{prix_litre}}', '', '', '=F{r}+G{r}+H{r}+I{r}', '=RANK(J{r},J$2:J$4,1)'],
+              ['Véhicule 2', '{{modele_v2}}', '{{immat_v2}}', '{{annee_achat_v2}}', '{{km_annuel_v2}}', '={{valeur_achat_v2}}/({{duree_amort_ans}}*{{km_annuel_v2}})', '={{conso_100km}}/100*{{prix_litre}}', '', '', '=F{r}+G{r}+H{r}+I{r}', '=RANK(J{r},J$2:J$4,1)'],
+              ['Véhicule 3', '{{modele_v3}}', '{{immat_v3}}', '{{annee_achat_v3}}', '{{km_annuel_v3}}', '={{valeur_achat_v3}}/({{duree_amort_ans}}*{{km_annuel_v3}})', '={{conso_100km}}/100*{{prix_litre}}', '', '', '=F{r}+G{r}+H{r}+I{r}', '=RANK(J{r},J$2:J$4,1)'],
+            ],
+            totalsRow: false,
+            colWidths: [14, 18, 14, 14, 14, 14, 14, 14, 14, 14, 12],
+          },
+          {
+            name: 'Charges Fixes',
+            title: 'Détail Charges Fixes — {{annee}}',
+            colorHeader: '283593',
+            headers: ['Véhicule', 'Assurance annuelle', 'Vignette', 'CT / Visite tech.', 'Crédit-bail', 'Total charges fixes', 'Charges fixes/km'],
+            rows: [
+              ['{{immat_v1}}', '', '', '', '', '=B{r}+C{r}+D{r}+E{r}', '=F{r}/{{km_annuel_v1}}'],
+              ['{{immat_v2}}', '', '', '', '', '=B{r}+C{r}+D{r}+E{r}', '=F{r}/{{km_annuel_v2}}'],
+              ['{{immat_v3}}', '', '', '', '', '=B{r}+C{r}+D{r}+E{r}', '=F{r}/{{km_annuel_v3}}'],
+            ],
+            totalsRow: true,
+            colWidths: [14, 18, 12, 18, 14, 18, 16],
+          },
+          {
+            name: 'Recommandations',
+            title: 'Recommandations de renouvellement',
+            colorHeader: '0D1B8E',
+            headers: ['Véhicule', 'Âge (ans)', 'Coût/km', 'Coût/km moyen flotte', 'Écart', 'Recommandation'],
+            rows: [
+              ['{{immat_v1}}', '={{annee}}-{{annee_achat_v1}}', '=\'Coût-Km Comparatif\'!J2', '=AVERAGE(\'Coût-Km Comparatif\'!J2:J4)', '=C2-D2', '=IF(C2>D2*1.15,"⚠ Envisager remplacement","✓ Garder")'],
+              ['{{immat_v2}}', '={{annee}}-{{annee_achat_v2}}', '=\'Coût-Km Comparatif\'!J3', '=AVERAGE(\'Coût-Km Comparatif\'!J2:J4)', '=C3-D3', '=IF(C3>D3*1.15,"⚠ Envisager remplacement","✓ Garder")'],
+              ['{{immat_v3}}', '={{annee}}-{{annee_achat_v3}}', '=\'Coût-Km Comparatif\'!J4', '=AVERAGE(\'Coût-Km Comparatif\'!J2:J4)', '=C4-D4', '=IF(C4>D4*1.15,"⚠ Envisager remplacement","✓ Garder")'],
+            ],
+            totalsRow: false,
+            colWidths: [14, 12, 14, 22, 12, 30],
+          },
+        ],
+      }),
+    },
+  ];
+
+  for (const t of templates) {
+    const r = await prisma.documentTemplate.upsert({
+      where: { code: t.code },
+      update: t,
+      create: t,
+    });
+    if (r.createdAt.getTime() === r.updatedAt.getTime()) {
+      created++;
+    } else {
+      updated++;
+    }
+  }
+
+  console.log(`Excel Transport OK — créés:${created} mis à jour:${updated} TOTAL:${await prisma.documentTemplate.count()}`);
+}
+
+main()
+  .catch((e) => { console.error(e); process.exit(1); })
+  .finally(() => prisma.$disconnect());
