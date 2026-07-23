@@ -29,26 +29,23 @@ export interface DocJson {
   pays: string;
 }
 
-const SYSTEM_PROMPT_JSON = `Tu es un expert juridique africain OHADA/UEMOA/CEMAC de niveau notarial, spécialisé dans la rédaction de documents professionnels longs, complets et juridiquement irréprochables.
-Tu génères des documents en JSON STRICT et UNIQUEMENT du JSON.
+const SYSTEM_PROMPT_JSON = `Tu es un expert juridique africain OHADA/UEMOA/CEMAC de niveau notarial.
+Tu génères des documents en JSON STRICT. Réponds UNIQUEMENT avec du JSON valide, sans aucun texte avant ou après.
 
-RÈGLES ABSOLUES:
-- Réponds avec du JSON valide UNIQUEMENT. Aucun texte avant ou après.
-- La longueur doit être ADAPTÉE AU TYPE : bail emphytéotique 10-15 pages, contrat de travail 5-10 pages, lettre 1-2 pages, statuts de société 15-25 pages. PAS DE LIMITE.
-- Chaque section : contenu COMPLET, DÉTAILLÉ, PROFESSIONNEL.
-- N'utilise JAMAIS de blancs à remplir (___) ni de placeholders. Rédige le contenu intégral avec des valeurs réalistes.
-- COHÉRENCE DES DATES OBLIGATOIRE : si le bail commence "à la date de signature" du ${new Date().getFullYear()}, la date de fin = année signature + durée en années. Le premier versement du canon = date de signature + 1 an (ou 6 mois si semestriel). NE PAS mélanger des dates fantaisistes qui se contredisent.
-- ORTHOGRAPHE : "Preneur" (jamais "Prenier"). Relire mentalement avant d'écrire.
-- RÉFÉRENCES LÉGALES EXACTES CI — FONCIER URBAIN :
-  * Décret n°99-594 du 13/10/1999 (propriété foncière urbaine en CI)
-  * Décret n°71-74 du 16/02/1971 (procédures domaniales et foncières)
-  * La loi n°98-750 concerne le domaine foncier RURAL — NE JAMAIS la citer pour l'urbain
-  * Pour sûretés/hypothèque : AUS OHADA du 15/12/2010
-  * Droits d'enregistrement : CGI ivoirien art. 708 ss. — 3% valeur capitalisée du canon
-- BAIL EMPHYTÉOTIQUE : acte NOTARIÉ obligatoire en CI (loi 60-366) ; mentionner Maître [Nom] Notaire ; enregistrement Conservation Foncière dans 3 mois, AGEF pour opposabilité aux tiers.
-- CESSION/SOUS-LOCATION : la clause de cession doit être COHÉRENTE — soit autorisée avec accord préalable, soit interdite. Ne pas se contredire dans le même article.
-- Inclus TOUJOURS : numéros RCCM/CNI/NIU réalistes (CI-ABJ-2019-B-12345), force majeure, arbitrage CCJA, clause d'éviction, garantie absence de charges.
-- Français NOTARIAL IRRÉPROCHABLE : zéro faute de frappe, zéro coquille.`;
+RÈGLES ABSOLUES :
+- JSON valide uniquement. Zéro texte hors JSON.
+- Respecte STRICTEMENT le nombre de mots demandé par section — ni plus, ni moins.
+- N'utilise JAMAIS de blancs (___) ni placeholders. Valeurs réalistes partout.
+- COHÉRENCE DES DATES : date de fin = date de début + durée. Premier versement = date de signature + fréquence. Zéro contradiction entre articles.
+- ORTHOGRAPHE ABSOLUE : "Preneur" (jamais "Prenier"), "Bailleur", "emphytéotique". Zéro coquille.
+- RÉFÉRENCES LÉGALES CI — FONCIER URBAIN :
+  * Décret n°99-594 du 13/10/1999 + décret n°71-74 du 16/02/1971
+  * La loi n°98-750 = domaine RURAL — NE JAMAIS citer pour l'urbain
+  * Sûretés : AUS OHADA 15/12/2010
+  * Droits d'enregistrement : CGI art. 708 ss. (3% valeur capitalisée)
+- BAIL EMPHYTÉOTIQUE CI : acte notarié obligatoire ; enregistrement Conservation Foncière dans 3 mois.
+- CESSION : une seule position cohérente (autorisée avec accord OU interdite) — zéro contradiction interne.
+- Inclus : RCCM/CNI/NIU réalistes (CI-ABJ-2019-B-12345), force majeure, arbitrage CCJA.`;
 
 function buildPrompt(input: DocGenInput): string {
   const { templateName, fields, answers, country, niveau } = input;
@@ -60,8 +57,9 @@ function buildPrompt(input: DocGenInput): string {
     })
     .filter(Boolean).join('\n');
 
-  // Adapter la densité au modèle : Haiku (standard) a ~7000 tokens, Sonnet/Opus beaucoup plus
-  const wordsPerSection = niveau === 'standard' ? '80 à 120' : niveau === 'pro' ? '200 à 350' : '300 à 500';
+  // Haiku (standard) : budget 7000 tokens. 60-80 mots × 10 sections ≈ 1500 tokens → safe.
+  // Sonnet/Opus ont 20k-64k tokens, peuvent générer des documents très denses.
+  const wordsPerSection = niveau === 'standard' ? '60 à 80' : niveau === 'pro' ? '200 à 350' : '300 à 500';
   const sectionsMin = niveau === 'standard' ? 10 : niveau === 'pro' ? 14 : 20;
   const niveauDesc = {
     standard: 'complet et conforme, toutes clauses obligatoires présentes, langage juridique précis',
@@ -77,8 +75,8 @@ ${provided || '(utilise des valeurs professionnelles standards)'}
 
 RÈGLES IMPÉRATIVES:
 1. COMPLÉTUDE ABSOLUE : génère les ${sectionsMin} sections minimum. Chaque section = ${wordsPerSection} mots. JAMAIS de sections vides.
-2. TOUTES CES SECTIONS SONT OBLIGATOIRES pour un bail emphytéotique :
-   Préambule → Définitions → Objet et description du bien → Durée → Canon emphytéotique et conditions financières → Droits réels du preneur → Obligations du preneur → Obligations du bailleur → Garanties et sûretés → Améliorations et constructions → Résiliation anticipée (avec indemnités et préavis) → Sort des constructions en fin de bail → Assurance obligatoire → Enregistrement foncier et publicité → Litiges et arbitrage OHADA → Dispositions finales
+2. SECTIONS OBLIGATOIRES (${sectionsMin} minimum) pour un bail emphytéotique :
+   Préambule → Définitions → Objet/Description du bien → Durée → Canon → Droits du preneur → Obligations → Résiliation → Sort des constructions → Litiges/Arbitrage CCJA → Dispositions finales${niveau !== 'standard' ? '\n   (Pro/Expert : ajouter aussi Garanties/Sûretés, Améliorations, Assurance, Enregistrement foncier, Force majeure, Cession)' : ''}
 3. RÉFÉRENCES LÉGALES EXACTES FONCIER URBAIN CI : décret n°99-594 du 13/10/1999, décret n°71-74 du 16/02/1971, AUS OHADA 15/12/2010 pour sûretés, CGI art. 708 ss. pour droits d'enregistrement. La loi 98-750 est RURALE — ne pas la citer ici.
 4. Numéros RCCM, CNI, NIU : génère des numéros réalistes formatés (ex: CI-ABJ-2019-B-12345).
 5. TERMINE le JSON complètement. Ne coupe jamais une section à mi-phrase.
