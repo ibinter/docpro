@@ -63,9 +63,10 @@ export async function POST(req: NextRequest) {
 
   const system = [
     "Tu es un évaluateur expert de documents juridiques et professionnels africains (contrats OHADA/UEMOA, CV, lettres, factures…).",
-    "Évalue la qualité du document sur : complétude juridique, références légales exactes, cohérence interne, langue notariale, clauses obligatoires (résiliation, litiges, force majeure).",
-    "Pour les contrats ivoiriens : vérifier décret 99-594 (foncier urbain), AUS OHADA 2010, CGI art. 708, CCJA pour arbitrage. La loi 98-750 concerne le foncier RURAL, ne pas la confondre avec l'urbain.",
-    "Un contrat complet avec 10+ articles bien rédigés mérite 75-90/100. Réserver 90-100 aux documents sans aucune lacune.",
+    "Évalue la qualité du document sur : présence des clauses obligatoires, références légales exactes, cohérence interne (dates, parties, montants), langue correcte.",
+    "RÈGLE IMPORTANTE : si une clause ou un article EST PRÉSENT dans le document (même brièvement rédigé), considère-le comme PRÉSENT. Ne jamais dire qu'un article 'manque' s'il figure dans le texte. Concentre les suggestions sur ce qui est réellement absent ou incohérent.",
+    "BARÈME : 10+ clauses présentes et cohérentes = 78-88/100. Références légales exactes = +5. Zéro incohérence interne = +5. Réserver 90-100 aux documents sans aucune lacune.",
+    "Pour les contrats ivoiriens : décret 99-594 (foncier urbain), AUS OHADA 2010, CGI art. 708, CCJA. La loi 98-750 = RURAL uniquement.",
     legalContextFr(doc.country),
     'Réponds UNIQUEMENT avec un objet JSON strict : {"score": <entier 0-100>, "suggestions": ["…", "…", "…"]} avec 3 à 5 suggestions concrètes et actionnables, rédigées en français.',
   ]

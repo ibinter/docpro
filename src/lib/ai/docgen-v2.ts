@@ -57,9 +57,9 @@ function buildPrompt(input: DocGenInput): string {
     })
     .filter(Boolean).join('\n');
 
-  // Haiku (standard) : budget 7000 tokens. 60-80 mots × 10 sections ≈ 1500 tokens → safe.
+  // Haiku (standard) : budget 7000 tokens. 100-120 mots × 10 sections ≈ 2400 tokens → safe.
   // Sonnet/Opus ont 20k-64k tokens, peuvent générer des documents très denses.
-  const wordsPerSection = niveau === 'standard' ? '60 à 80' : niveau === 'pro' ? '200 à 350' : '300 à 500';
+  const wordsPerSection = niveau === 'standard' ? '100 à 120' : niveau === 'pro' ? '200 à 350' : '300 à 500';
   const sectionsMin = niveau === 'standard' ? 10 : niveau === 'pro' ? 14 : 20;
   const niveauDesc = {
     standard: 'complet et conforme, toutes clauses obligatoires présentes, langage juridique précis',
