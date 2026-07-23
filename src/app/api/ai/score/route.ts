@@ -62,18 +62,35 @@ export async function POST(req: NextRequest) {
   }
 
   const system = [
-    "Tu es un évaluateur expert de documents professionnels (CV, lettres, contrats, factures…).",
-    "Évalue la qualité du document : lisibilité, pertinence, complétude, conformité aux usages, attractivité.",
+    "Tu es un évaluateur expert de documents juridiques et professionnels africains (contrats OHADA/UEMOA, CV, lettres, factures…).",
+    "Évalue la qualité du document sur : complétude juridique, références légales exactes, cohérence interne, langue notariale, clauses obligatoires (résiliation, litiges, force majeure).",
+    "Pour les contrats ivoiriens : vérifier décret 99-594 (foncier urbain), AUS OHADA 2010, CGI art. 708, CCJA pour arbitrage. La loi 98-750 concerne le foncier RURAL, ne pas la confondre avec l'urbain.",
+    "Un contrat complet avec 10+ articles bien rédigés mérite 75-90/100. Réserver 90-100 aux documents sans aucune lacune.",
     legalContextFr(doc.country),
     'Réponds UNIQUEMENT avec un objet JSON strict : {"score": <entier 0-100>, "suggestions": ["…", "…", "…"]} avec 3 à 5 suggestions concrètes et actionnables, rédigées en français.',
   ]
     .filter(Boolean)
     .join('\n');
 
+  // Utiliser contentJson (texte brut, compact) pour que l'analyseur voie le document complet.
+  // Le HTML strippé tronqué à 6000 chars ne couvrait que 5-6 articles sur 17.
+  let contenu: string;
+  if (doc.contentJson) {
+    try {
+      const parsed = JSON.parse(doc.contentJson) as { sections?: Array<{ titre?: string; contenu?: string }> };
+      const sections = parsed.sections ?? [];
+      contenu = sections.map((s) => `## ${s.titre ?? ''}\n${s.contenu ?? ''}`).join('\n\n');
+    } catch {
+      contenu = stripHtml(doc.contentHtml).slice(0, 12000);
+    }
+  } else {
+    contenu = stripHtml(doc.contentHtml).slice(0, 12000);
+  }
+
   const userMsg = JSON.stringify({
     type_de_document: doc.template.name,
     pays: countryName(doc.country),
-    contenu: stripHtml(doc.contentHtml).slice(0, 6000),
+    contenu: contenu.slice(0, 16000),
   });
 
   const raw = await askClaude(system, userMsg, 1200);
