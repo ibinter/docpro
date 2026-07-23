@@ -122,14 +122,30 @@ ${articles}
 </div>`
     : '';
 
+  const parties = doc.parties ? Object.entries(doc.parties).slice(0, 4) : [];
   const signatureBlock = `
-<div style="margin-top:60px;display:flex;justify-content:space-between;gap:40px">
-  ${doc.parties ? Object.entries(doc.parties).slice(0, 3).map(([k]) =>
-    `<div style="flex:1;text-align:center">
-      <p style="font-weight:600;margin-bottom:60px">${k}</p>
-      <p style="border-top:1px solid #333;padding-top:6px;font-size:.85rem;color:#555">Signature et cachet</p>
-    </div>`
-  ).join('') : ''}
+<div style="page-break-before:always;margin-top:0;padding-top:40px">
+  <h2 style="color:#0D2B4E;font-size:1.1rem;font-weight:700;border-bottom:2px solid #1565C0;padding-bottom:6px;margin-bottom:32px">SIGNATURES DES PARTIES</h2>
+  <p style="margin-bottom:32px;color:#555;font-size:.9rem">
+    Fait à ${doc.pays}, le ${doc.date_creation}, en ${parties.length <= 1 ? 'deux' : parties.length} exemplaires originaux, dont un (1) pour chaque partie.
+  </p>
+  <div style="display:flex;flex-wrap:wrap;gap:48px;justify-content:space-between">
+    ${parties.map(([k, v]) => `
+    <div style="flex:1;min-width:220px;border:1px solid #ccc;border-radius:6px;padding:20px 20px 0 20px">
+      <p style="font-weight:700;color:#0D2B4E;margin:0 0 4px;font-size:.95rem">${k}</p>
+      <p style="color:#555;font-size:.85rem;margin:0 0 16px;line-height:1.4">${v}</p>
+      <div style="background:#f9f9f9;border:1px dashed #aaa;border-radius:4px;height:100px;margin-bottom:16px;display:flex;align-items:center;justify-content:center">
+        <span style="color:#bbb;font-size:.8rem;font-style:italic">Espace réservé au cachet</span>
+      </div>
+      <p style="font-size:.8rem;color:#777;margin:0 0 6px">Lu et approuvé — Bon pour accord</p>
+      <div style="border-bottom:1px solid #333;margin-bottom:6px;height:60px"></div>
+      <p style="font-size:.78rem;color:#999;margin:0 0 20px;text-align:center">Signature</p>
+    </div>`).join('')}
+  </div>
+  <div style="margin-top:32px;padding:12px 16px;background:#f5f7ff;border-left:3px solid #1565C0;font-size:.8rem;color:#666">
+    Le présent contrat est soumis aux dispositions de l'Acte Uniforme OHADA et du droit applicable en ${doc.pays}.
+    Toute modification doit faire l'objet d'un avenant signé par toutes les parties.
+  </div>
 </div>`;
 
   return `<div style="font-family:Georgia,'Times New Roman',serif;font-size:11pt;line-height:1.7;color:#1a1a1a">
