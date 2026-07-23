@@ -52,41 +52,40 @@ function buildPrompt(input: DocGenInput): string {
     })
     .filter(Boolean).join('\n');
 
+  // Adapter la densité au modèle : Haiku (standard) a ~7000 tokens, Sonnet/Opus beaucoup plus
+  const wordsPerSection = niveau === 'standard' ? '80 à 120' : niveau === 'pro' ? '200 à 350' : '300 à 500';
+  const sectionsMin = niveau === 'standard' ? 10 : niveau === 'pro' ? 14 : 20;
   const niveauDesc = {
-    standard: 'complet, conforme au droit, bien structuré',
-    pro: 'personnalisé secteur + références jurisprudentielles, très détaillé',
-    expert: 'exhaustif, personnalisé marché local + chiffres + jurisprudence récente, qualité notariale',
+    standard: 'complet et conforme, toutes clauses obligatoires présentes, langage juridique précis',
+    pro: 'personnalisé secteur + références jurisprudentielles, très détaillé avec sous-articles',
+    expert: 'exhaustif, qualité notariale, jurisprudence récente, chiffres de marché local',
   }[niveau];
 
-  const sectionsMin = {
-    standard: 8,
-    pro: 12,
-    expert: 18,
-  }[niveau];
-
-  return `Génère un document complet "${templateName}" (niveau: ${niveau} — ${niveauDesc}).
+  return `Génère un "${templateName}" juridiquement complet (niveau: ${niveau} — ${niveauDesc}).
 Pays: ${country ?? "Côte d'Ivoire (OHADA)"}.
 
 Données client:
 ${provided || '(utilise des valeurs professionnelles standards)'}
 
-INSTRUCTIONS DE LONGUEUR:
-- Génère AUTANT DE SECTIONS QUE NÉCESSAIRE pour un document professionnel complet (minimum ${sectionsMin} sections).
-- Chaque section doit contenir 200 à 500 mots de contenu réel, complet et détaillé.
-- Un contrat doit couvrir : préambule, définitions, objet, durée, obligations des parties, conditions financières, garanties, résiliation, litiges, dispositions finales, et toutes clauses spécifiques au type de contrat.
-- Ne tronque JAMAIS le contenu. Si le document nécessite 20 sections pour être complet, génères-en 20.
+RÈGLES IMPÉRATIVES:
+1. COMPLÉTUDE ABSOLUE : génère les ${sectionsMin} sections minimum. Chaque section = ${wordsPerSection} mots. JAMAIS de sections vides.
+2. TOUTES CES SECTIONS SONT OBLIGATOIRES pour un bail emphytéotique :
+   Préambule → Définitions → Objet et description du bien → Durée → Canon emphytéotique et conditions financières → Droits réels du preneur → Obligations du preneur → Obligations du bailleur → Garanties et sûretés → Améliorations et constructions → Résiliation anticipée (avec indemnités et préavis) → Sort des constructions en fin de bail → Assurance obligatoire → Enregistrement foncier et publicité → Litiges et arbitrage OHADA → Dispositions finales
+3. RÉFÉRENCES LÉGALES EXACTES : cite loi n°98-750 du 23/12/1998, décret n°99-594 du 13/10/1999, AU OHADA sûretés, CGI ivoirien art. pertinents. Jamais "Code civil ivoirien" pour le foncier.
+4. Numéros RCCM, CNI, NIU : génère des numéros réalistes formatés (ex: CI-ABJ-2019-B-12345).
+5. TERMINE le JSON complètement. Ne coupe jamais une section à mi-phrase.
 
-Retourne ce JSON et rien d'autre:
+Retourne UNIQUEMENT ce JSON, sans aucun texte avant ou après :
 {
   "schema": "document.v1",
   "titre": "...",
   "parties": { "Bailleur": "...", "Preneur": "..." },
   "sections": [
-    { "titre": "Préambule", "contenu": "texte complet 200+ mots..." },
-    { "titre": "Article 1 — Objet du contrat", "contenu": "texte complet 200+ mots..." },
-    { "titre": "Article 2 — ...", "contenu": "texte complet 200+ mots..." }
+    { "titre": "Préambule", "contenu": "texte ${wordsPerSection} mots..." },
+    { "titre": "Article 1 — Définitions", "contenu": "..." },
+    { "titre": "Article 2 — Objet et description du bien loué", "contenu": "..." }
   ],
-  "clauses_speciales": ["clause détaillée 1", "clause détaillée 2"],
+  "clauses_speciales": ["clause 1 complète", "clause 2 complète"],
   "date_creation": "...",
   "pays": "..."
 }`;
