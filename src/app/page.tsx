@@ -640,46 +640,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ══ 7.27 — AUTRES LOGICIELS IBIG SOFT ══ */}
-      <section style={{ background: '#f5f7fa', padding: '48px 0' }}>
-        <div className="container">
-          <h2 className="text-center" style={{ fontSize: '1.7rem', marginBottom: 8 }}>
-            Découvrez également les autres solutions IBIG Soft
-          </h2>
-          <p className="text-center text-muted" style={{ marginBottom: 32 }}>
-            Un écosystème complet de logiciels professionnels pour l'Afrique.
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
-            {[
-              { nom: 'Scolaby', secteur: 'Gestion scolaire', desc: 'Gérez vos établissements scolaires — inscriptions, notes, bulletins, finances.', emoji: '🎓', statut: 'Disponible' },
-              { nom: 'IBIG ERP', secteur: 'ERP entreprise', desc: 'Solution ERP complète pour PME africaines — stock, ventes, comptabilité, RH.', emoji: '🏢', statut: 'Bientôt' },
-              { nom: 'ClinicSoft', secteur: 'Gestion médicale', desc: 'Dossiers patients, consultations, ordonnances, facturation médicale.', emoji: '🏥', statut: 'Bientôt' },
-            ].map(l => (
-              <div key={l.nom} style={{
-                background: '#fff', border: '1px solid #e0e0e0', borderRadius: 12, padding: 20,
-                display: 'flex', flexDirection: 'column', gap: 8,
-              }}>
-                <div style={{ fontSize: '2rem' }}>{l.emoji}</div>
-                <div style={{ fontWeight: 800, color: 'var(--navy)', fontSize: '1.05rem' }}>{l.nom}</div>
-                <div style={{ fontSize: '.78rem', color: '#888', fontWeight: 600 }}>{l.secteur}</div>
-                <p style={{ fontSize: '.85rem', color: '#555', lineHeight: 1.6, margin: 0, flex: 1 }}>{l.desc}</p>
-                <div style={{
-                  display: 'inline-block', width: 'fit-content', fontSize: '.72rem', fontWeight: 700, padding: '2px 10px', borderRadius: 10,
-                  background: l.statut === 'Disponible' ? '#e8f5e9' : '#fff8e1',
-                  color: l.statut === 'Disponible' ? '#2e7d32' : '#f57f17',
-                }}>
-                  {l.statut}
-                </div>
-              </div>
-            ))}
-          </div>
-          <p className="text-center mt-4">
-            <a href="https://ibigsoft.com" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
-              Voir toutes les solutions IBIG Soft
-            </a>
-          </p>
-        </div>
-      </section>
+      {/* ══ 7.27 — CARROUSEL SOLUTIONS IBIG SOFT (script universel) ══ */}
+      {/* Le script /assets/js/ibigsoft-universal.js injecte ici le carrousel dynamique */}
+      <div data-ibig="solutions" />
 
       {/* ══ 7.28 — IBIG PARTNERS ══ */}
       <section style={{

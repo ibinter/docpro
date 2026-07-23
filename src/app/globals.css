@@ -64,6 +64,13 @@ h1, h2, h3, h4 { color: var(--navy); line-height: 1.25; }
 .site-header .brand { font-weight: 800; font-size: 1.25rem; letter-spacing: -0.5px; }
 .site-header .brand em { color: var(--gold-l); font-style: normal; }
 .site-header nav { display: flex; gap: 22px; align-items: center; }
+/* Desktop nav visible, hamburger caché par défaut */
+.desktop-nav { display: flex; gap: 22px; align-items: center; }
+.mobile-menu-btn { display: none !important; }
+@media (max-width: 768px) {
+  .desktop-nav { display: none !important; }
+  .mobile-menu-btn { display: flex !important; }
+}
 
 /* ── Cards ── */
 .card {

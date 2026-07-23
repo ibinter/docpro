@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import './globals.css';
 import PwaRegister from '@/components/PwaRegister';
 
@@ -43,6 +44,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         <PwaRegister />
+        {/* Script universel IBIG Soft — injecte le carrousel "Nos solutions" dans les slots data-ibig="solutions" */}
+        <Script
+          src="/assets/js/ibigsoft-universal.js"
+          data-solution="docpro"
+          data-accent="#4F46E5"
+          data-render="solutions"
+          data-masquer-courante="true"
+          data-speed="40"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

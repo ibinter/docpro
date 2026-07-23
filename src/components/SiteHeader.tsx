@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { getSessionUser } from '@/lib/auth';
 import { getDict } from '@/lib/i18n';
 import { prisma } from '@/lib/db';
+import MobileNav from './MobileNav';
 
 export default async function SiteHeader() {
   const [user, { lang, t }] = await Promise.all([getSessionUser(), getDict()]);
@@ -20,6 +21,9 @@ export default async function SiteHeader() {
       /* ignore — badge non critique */
     }
   }
+
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+
   return (
     <header className="site-header">
       <div className="container flex-between">
@@ -27,14 +31,14 @@ export default async function SiteHeader() {
           <Image src="/logo-icone.svg" alt="IBIG DocPro" width={34} height={34} />
           <span>IBIG <em>DocPro</em></span>
         </Link>
-        <nav>
+
+        {/* Navigation desktop (masquée sur mobile) */}
+        <nav className="desktop-nav">
           <Link href="/catalogue">{t.nav.catalogue}</Link>
           <Link href="/tarifs">{t.nav.tarifs}</Link>
           {user ? (
             <>
-              {(user.role === 'admin' || user.role === 'superadmin') && (
-                <Link href="/admin">{t.nav.adminConsole}</Link>
-              )}
+              {isAdmin && <Link href="/admin">{t.nav.adminConsole}</Link>}
               <Link href="/panier" title="Mon panier" style={{ fontWeight: 600, position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 🛒 Panier
                 {cartCount > 0 && (
@@ -64,26 +68,28 @@ export default async function SiteHeader() {
               <Link href="/inscription" className="btn btn-gold btn-sm">{t.nav.inscription}</Link>
             </>
           )}
-          {/* Sélecteur de langue FR/EN — pose le cookie docpro_lang puis revient ici. */}
           <span aria-label="Langue / Language" style={{ whiteSpace: 'nowrap', marginLeft: 8 }}>
-            {/* Pas d'emoji drapeau : rendu inconsistant sous Windows/Chrome. */}
-            <a
-              href="/api/i18n/set?l=fr"
-              title="Français"
-              style={{ fontWeight: lang === 'fr' ? 800 : 400, opacity: lang === 'fr' ? 1 : 0.6 }}
-            >
-              FR
-            </a>
+            <a href="/api/i18n/set?l=fr" title="Français" style={{ fontWeight: lang === 'fr' ? 800 : 400, opacity: lang === 'fr' ? 1 : 0.6 }}>FR</a>
             {' · '}
-            <a
-              href="/api/i18n/set?l=en"
-              title="English"
-              style={{ fontWeight: lang === 'en' ? 800 : 400, opacity: lang === 'en' ? 1 : 0.6 }}
-            >
-              EN
-            </a>
+            <a href="/api/i18n/set?l=en" title="English" style={{ fontWeight: lang === 'en' ? 800 : 400, opacity: lang === 'en' ? 1 : 0.6 }}>EN</a>
           </span>
         </nav>
+
+        {/* Navigation mobile (hamburger) */}
+        <MobileNav
+          isLoggedIn={!!user}
+          isAdmin={isAdmin}
+          cartCount={cartCount}
+          lang={lang}
+          labels={{
+            catalogue: t.nav.catalogue,
+            tarifs: t.nav.tarifs,
+            connexion: t.nav.connexion,
+            inscription: t.nav.inscription,
+            monEspace: t.nav.monEspace,
+            adminConsole: t.nav.adminConsole,
+          }}
+        />
       </div>
     </header>
   );
