@@ -33,6 +33,7 @@ const SECTIONS: Section[] = [
   {
     title: 'Croissance',
     links: [
+      { href: '/admin/crm', label: 'CRM Démonstrations' },
       { href: '/admin/affiliation', label: 'Affiliation' },
       { href: '/admin/marketplace', label: 'Marketplace' },
     ],

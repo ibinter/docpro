@@ -613,3 +613,26 @@ model GenerationLog {
   schemaVersion  String   @default("v1")
   createdAt      DateTime @default(now())
 }
+
+
+// ─── CRM PROSPECTS & DÉMONSTRATIONS (Phase 7) ────────────────────────────────
+model DemoRequest {
+  id         String   @id @default(cuid())
+  nom        String
+  email      String
+  telephone  String?
+  entreprise String?
+  secteur    String?  // juridique_admin | rh_emploi | commercial | btp | sante | autre
+  pays       String   @default("CI")
+  besoins    String?  // description libre des besoins
+  niveauInteret String @default("standard") // standard | pro | expert | custom
+  // statut CRM : nouveau | contacte | qualifie | demo_planifiee | converti | perdu
+  status     String   @default("nouveau")
+  notesAdmin String?  // notes internes, non visibles du prospect
+  source     String   @default("site") // site | whatsapp | partenaire | referral
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
