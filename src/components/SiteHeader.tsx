@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getSessionUser } from '@/lib/auth';
 import { getDict } from '@/lib/i18n';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/db';
 
 export default async function SiteHeader() {
   const [user, { lang, t }] = await Promise.all([getSessionUser(), getDict()]);
