@@ -35,16 +35,20 @@ Tu génères des documents en JSON STRICT et UNIQUEMENT du JSON.
 RÈGLES ABSOLUES:
 - Réponds avec du JSON valide UNIQUEMENT. Aucun texte avant ou après.
 - La longueur doit être ADAPTÉE AU TYPE : bail emphytéotique 10-15 pages, contrat de travail 5-10 pages, lettre 1-2 pages, statuts de société 15-25 pages. PAS DE LIMITE.
-- Chaque section : contenu COMPLET, DÉTAILLÉ, PROFESSIONNEL (200-500 mots pour les actes juridiques).
+- Chaque section : contenu COMPLET, DÉTAILLÉ, PROFESSIONNEL.
 - N'utilise JAMAIS de blancs à remplir (___) ni de placeholders. Rédige le contenu intégral avec des valeurs réalistes.
-- RÉFÉRENCES LÉGALES EXACTES selon le pays et le TYPE DE DOCUMENT :
-  * Bail emphytéotique URBAIN en Côte d'Ivoire : décret n°99-594 du 13/10/1999 fixant les conditions de la propriété foncière urbaine, décret n°71-74 du 16/02/1971 relatif aux procédures domaniales et foncières, loi n°60-366 du 14/11/1960 portant Code civil ivoirien (art. 527 et ss. sur la propriété). La loi n°98-750 concerne le domaine foncier RURAL — NE PAS la citer pour le foncier urbain.
-  * Pour les sûretés (hypothèque) : Acte Uniforme OHADA du 15/12/2010 portant organisation des sûretés (AUS).
-  * Pour le bail commercial/emphytéotique commercial : l'AUDCG (Acte Uniforme sur le Droit Commercial Général) peut s'appliquer aux baux commerciaux ; préciser la nature exacte du bail.
-  * Droits d'enregistrement : CGI ivoirien, art. 708 et ss. — 3% de la valeur capitalisée du canon pour les baux de longue durée.
-- FORMALITÉS OBLIGATOIRES pour bail emphytéotique >18 ans : enregistrement à la Conservation Foncière d'Abidjan dans les 3 mois suivant la signature, publication foncière requise pour opposabilité aux tiers, droits d'enregistrement dus.
-- Inclus TOUJOURS : numéros RCCM/CNI/NIU réalistes formatés (ex: CI-ABJ-2019-B-12345), clause force majeure, clause médiation/arbitrage CCJA, clause d'éviction, garantie d'absence de charges.
-- Génère du français IRRÉPROCHABLE : zéro faute de frappe, langage notarial précis.`;
+- COHÉRENCE DES DATES OBLIGATOIRE : si le bail commence "à la date de signature" du ${new Date().getFullYear()}, la date de fin = année signature + durée en années. Le premier versement du canon = date de signature + 1 an (ou 6 mois si semestriel). NE PAS mélanger des dates fantaisistes qui se contredisent.
+- ORTHOGRAPHE : "Preneur" (jamais "Prenier"). Relire mentalement avant d'écrire.
+- RÉFÉRENCES LÉGALES EXACTES CI — FONCIER URBAIN :
+  * Décret n°99-594 du 13/10/1999 (propriété foncière urbaine en CI)
+  * Décret n°71-74 du 16/02/1971 (procédures domaniales et foncières)
+  * La loi n°98-750 concerne le domaine foncier RURAL — NE JAMAIS la citer pour l'urbain
+  * Pour sûretés/hypothèque : AUS OHADA du 15/12/2010
+  * Droits d'enregistrement : CGI ivoirien art. 708 ss. — 3% valeur capitalisée du canon
+- BAIL EMPHYTÉOTIQUE : acte NOTARIÉ obligatoire en CI (loi 60-366) ; mentionner Maître [Nom] Notaire ; enregistrement Conservation Foncière dans 3 mois, AGEF pour opposabilité aux tiers.
+- CESSION/SOUS-LOCATION : la clause de cession doit être COHÉRENTE — soit autorisée avec accord préalable, soit interdite. Ne pas se contredire dans le même article.
+- Inclus TOUJOURS : numéros RCCM/CNI/NIU réalistes (CI-ABJ-2019-B-12345), force majeure, arbitrage CCJA, clause d'éviction, garantie absence de charges.
+- Français NOTARIAL IRRÉPROCHABLE : zéro faute de frappe, zéro coquille.`;
 
 function buildPrompt(input: DocGenInput): string {
   const { templateName, fields, answers, country, niveau } = input;
@@ -75,7 +79,7 @@ RÈGLES IMPÉRATIVES:
 1. COMPLÉTUDE ABSOLUE : génère les ${sectionsMin} sections minimum. Chaque section = ${wordsPerSection} mots. JAMAIS de sections vides.
 2. TOUTES CES SECTIONS SONT OBLIGATOIRES pour un bail emphytéotique :
    Préambule → Définitions → Objet et description du bien → Durée → Canon emphytéotique et conditions financières → Droits réels du preneur → Obligations du preneur → Obligations du bailleur → Garanties et sûretés → Améliorations et constructions → Résiliation anticipée (avec indemnités et préavis) → Sort des constructions en fin de bail → Assurance obligatoire → Enregistrement foncier et publicité → Litiges et arbitrage OHADA → Dispositions finales
-3. RÉFÉRENCES LÉGALES EXACTES : cite loi n°98-750 du 23/12/1998, décret n°99-594 du 13/10/1999, AU OHADA sûretés, CGI ivoirien art. pertinents. Jamais "Code civil ivoirien" pour le foncier.
+3. RÉFÉRENCES LÉGALES EXACTES FONCIER URBAIN CI : décret n°99-594 du 13/10/1999, décret n°71-74 du 16/02/1971, AUS OHADA 15/12/2010 pour sûretés, CGI art. 708 ss. pour droits d'enregistrement. La loi 98-750 est RURALE — ne pas la citer ici.
 4. Numéros RCCM, CNI, NIU : génère des numéros réalistes formatés (ex: CI-ABJ-2019-B-12345).
 5. TERMINE le JSON complètement. Ne coupe jamais une section à mi-phrase.
 
