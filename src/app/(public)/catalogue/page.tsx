@@ -11,9 +11,9 @@ import AddToCartButton from '@/components/AddToCartButton';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Catalogue de documents �?? IBIG DocPro',
+  title: 'Catalogue de documents — IBIG DocPro',
   description:
-    'CV, contrats, statuts, factures, procurations�?� Plus de 1 200 documents professionnels conformes aux lois de votre pays.',
+    'CV, contrats, statuts, factures, procurations… Plus de 1 200 documents professionnels conformes aux lois de votre pays.',
 };
 
 const CATEGORY_CODES = [
@@ -45,7 +45,7 @@ function priceFrom(classe: string | null, fallbackPrice: number, currency: strin
   const cls = VALID_CLASSES.includes(classe as Classe) ? (classe as Classe) : null;
   if (cls) {
     const fcfa = DEFAULT_PRICE_GRID[cls].standard;
-    return `�? partir de ${formatFcfa(fcfa)} · ${formatUsd(fcfa)}`;
+    return `À partir de ${formatFcfa(fcfa)} · ${formatUsd(fcfa)}`;
   }
   // fallback : prix fixe du template
   const isFcfa = currency === 'XOF' || currency === 'FCFA';
@@ -136,7 +136,7 @@ export default async function CataloguePage({
               <span style={{ color: '#FFD700' }}>100 FCFA · $0.17</span>
             </span>
             <span style={{ color: 'rgba(255,255,255,.7)', fontSize: '.85rem', marginLeft: 12 }}>
-              Standard · Pro · Expert �?? Rechargez et économisez jusqu'à +30 %
+              Standard · Pro · Expert — Rechargez et économisez jusqu'à +30 %
             </span>
           </div>
           <Link href="/tarifs" className="btn btn-gold btn-sm" style={{ whiteSpace: 'nowrap' }}>
@@ -205,11 +205,11 @@ export default async function CataloguePage({
           ))}
         </div>
 
-        {/* �?tat vide */}
+        {/* État vide */}
         {templates.length === 0 && (
           recherche ? (
             <div className="card text-center" style={{ padding: '48px 24px' }}>
-              <div style={{ fontSize: '2.4rem' }}>�???</div>
+              <div style={{ fontSize: '2.4rem' }}>🔎</div>
               <h2 style={{ fontSize: '1.2rem' }} className="mt-1">
                 {t.catalogue.aucunResultatTitre(recherche)}
               </h2>
@@ -252,7 +252,7 @@ export default async function CataloguePage({
                           {priceFrom(tpl.classe, tpl.price, tpl.currency)}
                         </strong>
                         {tpl.templateType === 'excel' && (
-                          <span style={{ fontSize: '.7rem', color: '#2e7d32', marginLeft: 6 }}>�??? Excel</span>
+                          <span style={{ fontSize: '.7rem', color: '#2e7d32', marginLeft: 6 }}>📊 Excel</span>
                         )}
                       </div>
                       <div className="flex" style={{ gap: 6 }}>

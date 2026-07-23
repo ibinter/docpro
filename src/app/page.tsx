@@ -1,4 +1,4 @@
-?// Landing page de vente IBIG DocPro �?? page vendeur complète v2
+?// Landing page de vente IBIG DocPro — page vendeur complète v2
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { formatFcfa, formatUsd, DEFAULT_PRICE_GRID, RECHARGE_TIERS } from '@/lib/pricing';
@@ -32,18 +32,18 @@ const CATEGORIES_META: Record<string, { emoji: string; label: string }> = {
 
 
 const PAYS = [
-  { flag: '�??��??�', name: "Côte d'Ivoire" },
-  { flag: '�??��??�', name: 'Sénégal' },
-  { flag: '�??��??�', name: 'Cameroun' },
-  { flag: '�??��??�', name: 'Bénin' },
-  { flag: '�??��??�', name: 'Togo' },
-  { flag: '�??��??�', name: 'Burkina Faso' },
-  { flag: '�??��??�', name: 'Mali' },
-  { flag: '�??��??�', name: 'Guinée' },
-  { flag: '�??��??�', name: 'Congo' },
-  { flag: '�??��??�', name: 'Gabon' },
-  { flag: '�??��??�', name: 'Niger' },
-  { flag: '�??��??�', name: 'Maroc' },
+  { flag: '🇨🇮', name: "Côte d'Ivoire" },
+  { flag: '🇸🇳', name: 'Sénégal' },
+  { flag: '🇨🇲', name: 'Cameroun' },
+  { flag: '🇧🇯', name: 'Bénin' },
+  { flag: '🇹🇬', name: 'Togo' },
+  { flag: '🇧🇫', name: 'Burkina Faso' },
+  { flag: '🇲🇱', name: 'Mali' },
+  { flag: '🇬🇳', name: 'Guinée' },
+  { flag: '🇨🇬', name: 'Congo' },
+  { flag: '🇬🇦', name: 'Gabon' },
+  { flag: '🇳🇪', name: 'Niger' },
+  { flag: '🇲🇦', name: 'Maroc' },
 ];
 
 const TEMOIGNAGES = [
@@ -51,33 +51,33 @@ const TEMOIGNAGES = [
     texte: "J'ai obtenu mon contrat de bail en moins d'une minute. Conforme à la loi ivoirienne, avec toutes les clauses bien structurées. Rapide et fiable.",
     auteur: 'Koffi A.',
     poste: 'Propriétaire immobilier, Abidjan',
-    flag: '�??��??�',
+    flag: '🇨🇮',
   },
   {
     texte: "Mes statuts SARL étaient prêts en 2 minutes. Document complet, bien structuré, conforme à l'Acte uniforme OHADA. Aucune correction nécessaire.",
     auteur: 'Amadou D.',
     poste: 'Entrepreneur, Dakar',
-    flag: '�??��??�',
+    flag: '🇸🇳',
   },
   {
     texte: "En tant que DRH, j'utilise DocPro pour tous nos contrats CDI, CDD et avenants. Gain de temps énorme. Les documents sont impeccables et nos avocats les valident systématiquement.",
     auteur: 'Marie-Claire N.',
     poste: 'DRH, PME de 80 salariés, Douala',
-    flag: '�??��??�',
+    flag: '🇨🇲',
   },
   {
     texte: "J'ai soumis mon business plan généré par IBIG DocPro à une banque. Financement accordé. Le document était d'un niveau que je n'aurais jamais pu atteindre seul.",
     auteur: 'Youssouf T.',
     poste: 'Porteur de projet, Bamako',
-    flag: '�??��??�',
+    flag: '🇲🇱',
   },
 ];
 
 const AVANTAGES = [
-  { emoji: '�?�', titre: 'Disponible 24h/24', texte: 'Générez votre document à tout moment, sans rendez-vous ni délai d\'attente.' },
-  { emoji: '�??�', titre: 'Adapté à votre pays', texte: 'Chaque document intègre les dispositions légales du pays sélectionné �?? OHADA, codes locaux, UEMOA, CEMAC.' },
-  { emoji: '�??�', titre: '12 700+ mod�les pr�ts', texte: 'Contrats, CV, statuts, baux, business plans, QHSE, projets? 19 domaines, tous les documents courants de votre activit�.' },
-  { emoji: '�?�️', titre: 'Entièrement personnalisé', texte: 'Chaque document est adapté à vos informations spécifiques : parties, dates, clauses, secteur d\'activité.' },
+  { emoji: '⚡', titre: 'Disponible 24h/24', texte: 'Générez votre document à tout moment, sans rendez-vous ni délai d\'attente.' },
+  { emoji: '�?', titre: 'Adapté à votre pays', texte: 'Chaque document intègre les dispositions légales du pays sélectionné — OHADA, codes locaux, UEMOA, CEMAC.' },
+  { emoji: '�?', titre: '12 700+ mod�les pr�ts', texte: 'Contrats, CV, statuts, baux, business plans, QHSE, projets� 19 domaines, tous les documents courants de votre activit�.' },
+  { emoji: '�?�?', titre: 'Entièrement personnalisé', texte: 'Chaque document est adapté à vos informations spécifiques : parties, dates, clauses, secteur d\'activité.' },
 ];
 
 export default async function HomePage() {
@@ -94,7 +94,7 @@ export default async function HomePage() {
     <>
       <SiteHeader />
 
-      {/* �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?� HERO �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?� */}
+      {/* �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? HERO �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */}
       <section style={{
         background: 'linear-gradient(135deg, #0D2B4E 0%, #1565C0 60%, #0D47A1 100%)',
         color: '#fff', padding: '64px 0 56px',
@@ -108,7 +108,7 @@ export default async function HomePage() {
             padding: '6px 18px', fontSize: '.85rem', fontWeight: 600,
             color: '#FFD700', marginBottom: 24, letterSpacing: .5,
           }}>
-            �?� {templateCount.toLocaleString('fr-FR')} modèles · 15 pays africains · Conforme OHADA
+            ✦ {templateCount.toLocaleString('fr-FR')} modèles · 15 pays africains · Conforme OHADA
           </div>
 
           <h1 style={{
@@ -124,7 +124,7 @@ export default async function HomePage() {
             fontSize: 'clamp(1rem, 2.5vw, 1.2rem)', opacity: .9,
             maxWidth: 620, margin: '0 auto 32px', lineHeight: 1.7,
           }}>
-            Contrats, CV, statuts de société, baux, business plans�?� Tous vos documents
+            Contrats, CV, statuts de société, baux, business plans… Tous vos documents
             juridiques et professionnels, <strong style={{ color: '#FFD700' }}>conformes aux lois de votre pays</strong>,
             disponibles en quelques secondes.
           </p>
@@ -142,7 +142,7 @@ export default async function HomePage() {
 
           {/* Réassurance rapide */}
           <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap', opacity: .8, fontSize: '.85rem' }}>
-            {['�?? Sans inscription obligatoire', '�?? Paiement Mobile Money accepté', '�?? Document prêt en 30 secondes', '�?? �? partir de 100 FCFA · $0.17'].map(item => (
+            {['✓ Sans inscription obligatoire', '✓ Paiement Mobile Money accepté', '✓ Document prêt en 30 secondes', '✓ À partir de 100 FCFA · $0.17'].map(item => (
               <span key={item}>{item}</span>
             ))}
           </div>
@@ -168,7 +168,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?� AVANTAGES �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?� */}
+      {/* �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? AVANTAGES �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */}
       <section className="container mt-4">
         <h2 className="text-center" style={{ fontSize: '1.7rem' }}>Pourquoi choisir IBIG DocPro ?</h2>
         <p className="text-center text-muted mb-3" style={{ maxWidth: 560, margin: '8px auto 28px' }}>
@@ -219,17 +219,17 @@ export default async function HomePage() {
         </p>
       </section>
 
-      {/* �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?� COMMENT �?A MARCHE �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?� */}
+      {/* �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? COMMENT ÇA MARCHE �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */}
       <section style={{ background: '#f5f7fa', padding: '48px 0', marginTop: 48 }}>
         <div className="container">
           <h2 className="text-center" style={{ fontSize: '1.7rem' }}>De zéro à votre document en 4 étapes</h2>
           <p className="text-center text-muted mb-3">Moins de 60 secondes. Vraiment.</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24, marginTop: 32 }}>
             {[
-              { num: '1', icon: '�??�', titre: 'Choisissez', texte: 'Parcourez le catalogue et sélectionnez le document dont vous avez besoin.' },
-              { num: '2', icon: '�?�️', titre: 'Renseignez', texte: "L'IA vous pose quelques questions simples. Remplissez en moins d'une minute." },
-              { num: '3', icon: '�?�', titre: 'Générez', texte: "Votre document complet et personnalisé est prêt. Prévisualisez-le immédiatement." },
-              { num: '4', icon: '�??�', titre: 'Payez & Téléchargez', texte: 'Payez via Mobile Money. Téléchargez en PDF, Word ou PowerPoint.' },
+              { num: '1', icon: '�?', titre: 'Choisissez', texte: 'Parcourez le catalogue et sélectionnez le document dont vous avez besoin.' },
+              { num: '2', icon: '�?�?', titre: 'Renseignez', texte: "L'IA vous pose quelques questions simples. Remplissez en moins d'une minute." },
+              { num: '3', icon: '⚡', titre: 'Générez', texte: "Votre document complet et personnalisé est prêt. Prévisualisez-le immédiatement." },
+              { num: '4', icon: '📥', titre: 'Payez & Téléchargez', texte: 'Payez via Mobile Money. Téléchargez en PDF, Word ou PowerPoint.' },
             ].map(e => (
               <div key={e.num} style={{ textAlign: 'center' }}>
                 <div style={{
@@ -246,12 +246,12 @@ export default async function HomePage() {
             ))}
           </div>
           <p className="text-center mt-4">
-            <Link href="/catalogue" className="btn btn-gold btn-lg">Essayer maintenant �?? sans inscription</Link>
+            <Link href="/catalogue" className="btn btn-gold btn-lg">Essayer maintenant — sans inscription</Link>
           </p>
         </div>
       </section>
 
-      {/* �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?� T�?MOIGNAGES �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?� */}
+      {/* �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? TÉMOIGNAGES �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */}
       <section className="container mt-4">
         <h2 className="text-center" style={{ fontSize: '1.7rem' }}>Ils nous font confiance</h2>
         <p className="text-center text-muted mb-3">Des milliers de professionnels africains génèrent leurs documents avec IBIG DocPro.</p>
@@ -261,7 +261,7 @@ export default async function HomePage() {
               background: '#fff', border: '1px solid #e0e0e0', borderRadius: 10,
               padding: 20, display: 'flex', flexDirection: 'column', gap: 12,
             }}>
-              <div style={{ color: '#FFB300', fontSize: '1rem' }}>�??�??�??�??�??</div>
+              <div style={{ color: '#FFB300', fontSize: '1rem' }}>★★★★★</div>
               <p style={{ fontSize: '.9rem', color: '#333', lineHeight: 1.7, fontStyle: 'italic', margin: 0, flex: 1 }}>
                 "{t.texte}"
               </p>
@@ -283,7 +283,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?� FONCTIONNALIT�?S CL�? �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?� */}
+      {/* �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? FONCTIONNALITÉS CLÉ �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */}
       <section style={{ background: '#0D2B4E', color: '#fff', padding: '56px 0', marginTop: 48 }}>
         <div className="container">
           <h2 className="text-center" style={{ color: '#fff', fontSize: '1.7rem' }}>Pourquoi IBIG DocPro est différent</h2>
@@ -292,12 +292,12 @@ export default async function HomePage() {
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 24 }}>
             {[
-              { icon: '�??️', titre: 'Droit OHADA & lois locales', texte: 'Chaque clause est conforme à l\'Acte uniforme OHADA, au Code du travail et aux lois du pays sélectionné.' },
-              { icon: '�?�️', titre: 'Rédaction de niveau professionnel', texte: 'Clauses complètes, terminologie exacte, structure conforme �?? chaque document respecte les standards du droit OHADA et des lois locales.' },
-              { icon: '�???', titre: 'QR code d\'authenticité', texte: 'Chaque document payé porte un QR code vérifiable. Impossibilité de falsification �?? votre document est certifiable.' },
-              { icon: '�??�', titre: '15 pays africains', texte: 'CI, SN, CM, BJ, TG, BF, ML, GN, GA, CG, NE, CD, MA, DZ, TN. Adaptations légales automatiques.' },
-              { icon: '�??�', titre: 'Mobile Money', texte: 'Orange Money, MTN MoMo, Wave, Moov�?� Payez comme vous le faites déjà. Pas besoin de carte bancaire.' },
-              { icon: '�???', titre: 'PDF · Word · PowerPoint · Excel', texte: 'Un seul paiement donne accès à tous les formats. Modifiable dans Word, partageable en PDF.' },
+              { icon: '⚖�?', titre: 'Droit OHADA & lois locales', texte: 'Chaque clause est conforme à l\'Acte uniforme OHADA, au Code du travail et aux lois du pays sélectionné.' },
+              { icon: '�?�?', titre: 'Rédaction de niveau professionnel', texte: 'Clauses complètes, terminologie exacte, structure conforme — chaque document respecte les standards du droit OHADA et des lois locales.' },
+              { icon: '🔒', titre: 'QR code d\'authenticité', texte: 'Chaque document payé porte un QR code vérifiable. Impossibilité de falsification — votre document est certifiable.' },
+              { icon: '�?', titre: '15 pays africains', texte: 'CI, SN, CM, BJ, TG, BF, ML, GN, GA, CG, NE, CD, MA, DZ, TN. Adaptations légales automatiques.' },
+              { icon: '📱', titre: 'Mobile Money', texte: 'Orange Money, MTN MoMo, Wave, Moov… Payez comme vous le faites déjà. Pas besoin de carte bancaire.' },
+              { icon: '📄', titre: 'PDF · Word · PowerPoint · Excel', texte: 'Un seul paiement donne accès à tous les formats. Modifiable dans Word, partageable en PDF.' },
             ].map(f => (
               <div key={f.titre} style={{ display: 'flex', gap: 14 }}>
                 <div style={{ fontSize: '1.8rem', flexShrink: 0, marginTop: 2 }}>{f.icon}</div>
@@ -311,7 +311,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?� PAYS COUVERTS �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?� */}
+      {/* �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? PAYS COUVERTS �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */}
       <section className="container mt-4">
         <h2 className="text-center" style={{ fontSize: '1.7rem' }}>Disponible dans toute l'Afrique francophone</h2>
         <p className="text-center text-muted mb-3">Documents adaptés aux lois de chaque pays. Sélectionnez votre pays lors de la génération.</p>
@@ -328,7 +328,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?� TARIFICATION �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?� */}
+      {/* �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? TARIFICATION �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */}
       <section style={{ background: '#f5f7fa', padding: '56px 0', marginTop: 48 }}>
         <div className="container">
           <h2 className="text-center" style={{ fontSize: '1.7rem' }}>Tarification simple et transparente</h2>
@@ -339,13 +339,13 @@ export default async function HomePage() {
           {/* 3 niveaux */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 28 }}>
             {([
-              { niveau: 'standard', emoji: '�???', label: 'Standard', color: '#1565C0',
+              { niveau: 'standard', emoji: '📄', label: 'Standard', color: '#1565C0',
                 desc: 'Complet · conforme · PDF', depuis: DEFAULT_PRICE_GRID.A.standard,
                 features: ['Document complet OHADA', 'Format PDF', 'QR d\'authenticité'] },
-              { niveau: 'pro', emoji: '⭐', label: 'Pro', color: '#F57F17',
+              { niveau: 'pro', emoji: '�?', label: 'Pro', color: '#F57F17',
                 desc: 'Personnalisé · PDF + Word', depuis: DEFAULT_PRICE_GRID.A.pro,
                 features: ['Tout Standard +', 'Personnalisé secteur', 'PDF + Word (DOCX)', '2 régénérations'] },
-              { niveau: 'expert', emoji: '�???', label: 'Expert', color: '#7c3aed',
+              { niveau: 'expert', emoji: '💎', label: 'Expert', color: '#7c3aed',
                 desc: 'Maximum · tous formats · relecture', depuis: DEFAULT_PRICE_GRID.A.expert,
                 features: ['Tout Pro +', 'Jurisprudence locale', 'Tous les formats', 'Relecture humaine'] },
             ] as const).map(n => (
@@ -359,7 +359,7 @@ export default async function HomePage() {
                     position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
                     background: n.color, color: '#fff', fontSize: '.72rem', fontWeight: 700,
                     padding: '3px 12px', borderRadius: 12,
-                  }}>RECOMMAND�?</div>
+                  }}>RECOMMANDÉ</div>
                 )}
                 <div style={{ textAlign: 'center', marginBottom: 16 }}>
                   <div style={{ fontSize: '1.8rem' }}>{n.emoji}</div>
@@ -373,7 +373,7 @@ export default async function HomePage() {
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 16px', lineHeight: 2 }}>
                   {n.features.map(f => (
                     <li key={f} style={{ fontSize: '.88rem', color: '#333' }}>
-                      <span style={{ color: '#2e7d32', fontWeight: 700, marginRight: 6 }}>�??</span>{f}
+                      <span style={{ color: '#2e7d32', fontWeight: 700, marginRight: 6 }}>✓</span>{f}
                     </li>
                   ))}
                 </ul>
@@ -392,11 +392,11 @@ export default async function HomePage() {
           }}>
             <div>
               <div style={{ fontWeight: 700, fontSize: '1.05rem', marginBottom: 6 }}>
-                �??� Rechargez votre portefeuille �?? jusqu'à <span style={{ color: '#FFD700' }}>+30 % offerts</span>
+                💰 Rechargez votre portefeuille — jusqu'à <span style={{ color: '#FFD700' }}>+30 % offerts</span>
               </div>
               <div style={{ opacity: .8, fontSize: '.88rem' }}>
                 {RECHARGE_TIERS.filter(r => r.bonusPct > 0)
-                  .map(r => `Rechargez ${formatFcfa(r.amount)} �?? recevez ${formatFcfa(r.receive)} (+${r.bonusPct}%)`)
+                  .map(r => `Rechargez ${formatFcfa(r.amount)} → recevez ${formatFcfa(r.receive)} (+${r.bonusPct}%)`)
                   .join('  ·  ')}
               </div>
             </div>
@@ -405,13 +405,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?� CTA FINAL �?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?� */}
+      {/* �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? CTA FINAL �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */}
       <section style={{
         background: 'linear-gradient(135deg,#1565C0,#0D47A1)',
         padding: '64px 0', textAlign: 'center', color: '#fff',
       }}>
         <div className="container">
-          <div style={{ fontSize: '3rem', marginBottom: 12 }}>�???</div>
+          <div style={{ fontSize: '3rem', marginBottom: 12 }}>🚀</div>
           <h2 style={{ color: '#fff', fontSize: '1.9rem', marginBottom: 12 }}>
             Générez votre premier document maintenant
           </h2>
@@ -428,7 +428,7 @@ export default async function HomePage() {
             </Link>
           </div>
           <p style={{ opacity: .55, fontSize: '.8rem', marginTop: 20 }}>
-            �?? Mobile Money accepté &nbsp;·&nbsp; �?? Conforme droit OHADA &nbsp;·&nbsp; �?? 15 pays couverts
+            ✓ Mobile Money accepté &nbsp;·&nbsp; ✓ Conforme droit OHADA &nbsp;·&nbsp; ✓ 15 pays couverts
           </p>
         </div>
       </section>
