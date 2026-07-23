@@ -5,7 +5,8 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { prisma } from './db';
 
 const COOKIE = 'docpro_session';
-const SECRET = process.env.SESSION_SECRET || 'dev-secret';
+const SECRET = process.env.SESSION_SECRET ?? 'dev-secret-change-en-prod-32chars!!'
+if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) { console.error('[SECURITE CRITIQUE] SESSION_SECRET non défini en production !') }
 const MAX_AGE = 60 * 60 * 24 * 7; // 7 jours
 
 type SessionPayload = { uid: string; role: string; exp: number };

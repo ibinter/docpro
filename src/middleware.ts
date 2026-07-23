@@ -114,7 +114,7 @@ export function middleware(req: NextRequest): NextResponse {
 
   // ── 2. CSRF léger (POST /api/* avec Origin discordant) ──────
   if (
-    req.method === 'POST' &&
+    MUTATING_METHODS.has(req.method) &&
     pathname.startsWith('/api/') &&
     !pathname.startsWith('/api/webhooks/') &&
     !pathname.startsWith('/api/v1/')
@@ -146,7 +146,7 @@ export function middleware(req: NextRequest): NextResponse {
   if (isAdminPage || isAdminApi || isCronApi) {
     // Le cron peut être appelé sans cookie avec un header x-cron-key
     // (la route /api/cron/run vérifie elle-même la valeur de la clé).
-    const hasCronKey = isCronApi && req.headers.get('x-cron-key') !== null;
+    const hasCronKey = isCronApi && !!process.env.CRON_SECRET && req.headers.get('x-cron-key') === process.env.CRON_SECRET;
     const hasSessionCookie = req.cookies.get(SESSION_COOKIE) !== undefined;
 
     if (!hasSessionCookie && !hasCronKey) {

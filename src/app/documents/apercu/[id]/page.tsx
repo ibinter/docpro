@@ -74,6 +74,13 @@ export default async function ApercuPage({ params }: { params: Promise<{ id: str
     ...translations.filter((t) => t.id !== doc.id).map((t) => ({ ...t, original: false })),
   ];
 
+  function sanitize(html: string): string {
+    return html
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/on\w+\s*=\s*(?:"[^"]*"|'[^']*')/gi, '')
+      .replace(/javascript\s*:/gi, 'javascript-blocked:')
+  }
+
   return (
     <>
       <SiteHeader />
@@ -133,7 +140,7 @@ export default async function ApercuPage({ params }: { params: Promise<{ id: str
               ))}
             </div>
           )}
-          <div dangerouslySetInnerHTML={{ __html: doc.contentHtml }} />
+          <div dangerouslySetInnerHTML={{ __html: sanitize(doc.contentHtml) }} />
         </div>
 
         <ApercuActions

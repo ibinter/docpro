@@ -8,8 +8,13 @@ import { createHmac, timingSafeEqual } from 'crypto';
 
 export const MONEROO_SIGNATURE_HEADER = 'x-moneroo-signature';
 
+const WEBHOOK_SECRET = process.env.MONEROO_WEBHOOK_SECRET ?? 'whsec_dev_only';
+if (!process.env.MONEROO_WEBHOOK_SECRET) {
+  console.warn('[moneroo] MONEROO_WEBHOOK_SECRET non défini — fallback dev utilisé. NE PAS utiliser en production.');
+}
+
 function webhookSecret(): string {
-  return process.env.MONEROO_WEBHOOK_SECRET || 'whsec_dev_only';
+  return WEBHOOK_SECRET;
 }
 
 /** Signature hex HMAC-SHA256 du corps BRUT (chaîne exacte envoyée sur le fil). */

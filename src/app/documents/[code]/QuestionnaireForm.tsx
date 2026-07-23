@@ -2,7 +2,7 @@
 // Formulaire ChatDoc — étape par étape, un champ à la fois, avec barre de progression.
 // + Mode assistant conversationnel (IA) : description libre → pré-remplissage,
 // + Sélecteur « Pays du document » (adaptation légale, CDC §6.2).
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import type { TemplateField, Answers } from '@/lib/docgen';
 
@@ -31,6 +31,7 @@ export default function QuestionnaireForm({
   const [step, setStep] = useState(0); // index du premier champ de l'étape
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const submittingRef = useRef(false);
 
   // Mode assistant (IA)
   const [mode, setMode] = useState<'form' | 'assistant'>('form');
@@ -69,8 +70,10 @@ export default function QuestionnaireForm({
   };
 
   const submit = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     const err = validateStep(fields);
-    if (err) return setError(err);
+    if (err) { submittingRef.current = false; return setError(err); }
     setError(null);
     setLoading(true);
     try {
@@ -85,6 +88,8 @@ export default function QuestionnaireForm({
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur inattendue.');
       setLoading(false);
+    } finally {
+      submittingRef.current = false;
     }
   };
 

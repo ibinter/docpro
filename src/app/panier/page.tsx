@@ -1,6 +1,7 @@
 'use client';
 // Page panier — sélection multiple de documents, paiement unique.
 import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { formatMoney } from '@/lib/money';
 
@@ -26,6 +27,7 @@ interface Cart {
 }
 
 export default function PanierPage() {
+  const router = useRouter();
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const [removing, setRemoving] = useState<string | null>(null);
@@ -51,7 +53,11 @@ export default function PanierPage() {
   const removeItem = async (templateId: string) => {
     setRemoving(templateId);
     try {
-      await fetch(`/api/cart?templateId=${templateId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/cart?templateId=${templateId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setMessage({ type: 'error', text: data.error ?? 'Impossible de retirer cet article. Réessayez.' });
+      }
       await fetchCart();
     } finally {
       setRemoving(null);
@@ -67,7 +73,7 @@ export default function PanierPage() {
       if (res.ok) {
         setMessage({ type: 'success', text: `Commande ${data.number} créée — Total : ${formatMoney(data.total, data.currency)}. Rendez-vous dans vos paiements pour finaliser.` });
         setCart(null);
-        setTimeout(() => { window.location.href = '/compte/paiements'; }, 2500);
+        setTimeout(() => { router.push('/compte/paiements'); }, 2500);
       } else {
         setMessage({ type: 'error', text: data.error ?? 'Erreur lors du checkout.' });
       }

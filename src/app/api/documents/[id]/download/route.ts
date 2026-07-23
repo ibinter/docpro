@@ -15,7 +15,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const user = await getSessionUser();
   const isStaff = user && (user.role === 'admin' || user.role === 'superadmin');
-  if (doc.userId && doc.userId !== user?.id && !isStaff) {
+  if ((doc.userId === null || doc.userId !== user?.id) && !isStaff) {
     return NextResponse.json({ error: 'Accès refusé.' }, { status: 403 });
   }
   if (!doc.paid) {

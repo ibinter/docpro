@@ -68,7 +68,8 @@ export async function POST(req: Request) {
     const next = String(form.get('next') ?? '');
     const dest = next.startsWith('/') && !next.startsWith('//') ? next : '/compte';
     return NextResponse.redirect(new URL(dest, req.url), 303);
-  } catch {
+  } catch (e) {
+    if ((e as { code?: string })?.code === 'P2002') return back(req, 'email_utilise');
     return back(req, 'erreur_serveur');
   }
 }

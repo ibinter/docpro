@@ -289,6 +289,6 @@ export async function POST(req: Request) {
         data: { error: e instanceof Error ? e.message : 'erreur inconnue' },
       });
     } catch { /* l'event reste non-processed pour retraitement */ }
-    return NextResponse.json({ received: true, error: 'traitement différé' });
+    return NextResponse.json({ received: true, error: 'traitement différé' }, { status: 500 });
   }
 }

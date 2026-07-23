@@ -2,6 +2,7 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/auth';
 import { updateProfile } from './actions';
+import SubmitButton from './SubmitButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,7 +49,7 @@ export default async function ProfilPage({
             </div>
             <div className="field">
               <label className="label" htmlFor="email">Adresse e-mail</label>
-              <input id="email" className="input" value={user.email} disabled />
+              <input id="email" className="input" defaultValue={user.email} disabled />
               <p className="form-hint">L&apos;adresse e-mail ne peut pas être modifiée.</p>
             </div>
             <div className="field">
@@ -109,7 +110,7 @@ export default async function ProfilPage({
           </div>
         </div>
 
-        <button type="submit" className="btn btn-primary btn-lg">Enregistrer mon profil</button>
+        <SubmitButton />
       </form>
     </div>
   );

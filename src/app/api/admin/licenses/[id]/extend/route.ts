@@ -14,6 +14,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const reason = requiredString(body, 'reason');
     const days = typeof body.days === 'number' ? Math.floor(body.days) : NaN;
     if (!reason) return NextResponse.json({ error: 'Motif obligatoire' }, { status: 400 });
+    if (!days || days < 1 || days > 3650) return NextResponse.json({ error: 'Durée invalide (entre 1 et 3650 jours).' }, { status: 400 })
     if (!Number.isFinite(days) || days < 1) {
       return NextResponse.json({ error: 'Durée (jours) invalide' }, { status: 400 });
     }

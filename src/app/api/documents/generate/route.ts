@@ -62,6 +62,9 @@ export async function POST(req: NextRequest) {
   }
 
   const user = await getSessionUser();
+  if ((niveau === 'pro' || niveau === 'expert') && !user) {
+    return NextResponse.json({ error: 'Connexion requise pour les niveaux pro et expert.' }, { status: 401 })
+  }
   const country = normalizeCountry(body.country) ?? user?.country ?? null;
   const isExcel = template.templateType === 'excel';
 

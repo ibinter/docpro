@@ -31,6 +31,14 @@ export async function POST(req: Request) {
 
     const country = body.billingCountry?.trim().toUpperCase();
 
+    // Guard anti-double-débit : vérifie qu'aucune transaction active n'existe déjà
+    const existingTx = await prisma.transaction.findFirst({
+      where: { orderId: order.id, status: { in: ['en_cours', 'reussie'] } },
+    });
+    if (existingTx) {
+      return NextResponse.json({ error: 'Paiement déjà initié pour cette commande.' }, { status: 409 });
+    }
+
     const transaction = await prisma.transaction.create({
       data: {
         orderId: order.id,

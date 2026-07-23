@@ -44,6 +44,15 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ transactio
     }
     const order = transaction.order;
 
+    // ── Guard atomique anti-double-validation (race condition CDC §14.2)
+    const guard = await prisma.transaction.updateMany({
+      where: { id: transaction.id, status: { in: ['a_verifier', 'complement_demande'] } },
+      data: { status: 'en_traitement' },
+    });
+    if (guard.count === 0) {
+      return NextResponse.json({ error: 'Transaction déjà traitée ou en cours.' }, { status: 409 });
+    }
+
     // ── 1. Transaction validée manuellement + preuves validées
     await prisma.$transaction(async (tx) => {
       await tx.transaction.update({
@@ -95,7 +104,16 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ transactio
       await prisma.order.update({ where: { id: order.id }, data: { status: 'payee' } });
     }
 
-    // ── 3. Facture + reçu (CDC §16.2)
+    // ── 3. Facture + reçu (CDC §16.2) — guard anti-double-facture
+    const existingInvoice = await prisma.invoice.findFirst({ where: { orderId: order.id } });
+    if (existingInvoice) {
+      return NextResponse.json({
+        ok: true,
+        transactionId: transaction.id,
+        status: 'validee_manuellement',
+        invoices: { duplicate: true },
+      });
+    }
     const invCurrency = currency ?? order.currency;
     const invoiceData = {
       orderId: order.id,

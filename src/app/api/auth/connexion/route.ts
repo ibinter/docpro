@@ -48,6 +48,10 @@ export async function POST(req: Request) {
     }
 
     await createSession(user.id, user.role);
+    const nextParam = new URL(req.url).searchParams.get('next') ?? '';
+    if (nextParam.startsWith('/') && !nextParam.startsWith('//')) {
+      return NextResponse.redirect(new URL(nextParam, req.url), 303);
+    }
     const destination = user.role === 'admin' || user.role === 'superadmin' ? '/admin' : '/compte';
     return NextResponse.redirect(new URL(destination, req.url), 303);
   } catch {
