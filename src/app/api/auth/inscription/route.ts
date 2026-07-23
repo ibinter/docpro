@@ -6,12 +6,13 @@ import { prisma } from '@/lib/db';
 import { createSession } from '@/lib/auth';
 import { findReferrerByCode } from '@/lib/affiliate';
 import { ALL_COUNTRY_CODES } from '@/components/public/countries';
+import { makeUrl } from '@/lib/redirect';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PHONE_RE = /^\+?[0-9 ().-]{8,20}$/;
 
 function back(req: Request, code: string) {
-  return NextResponse.redirect(new URL(`/inscription?erreur=${code}`, req.url), 303);
+  return NextResponse.redirect(makeUrl(`/inscription?erreur=${code}`), 303);
 }
 
 export async function POST(req: Request) {
@@ -67,7 +68,7 @@ export async function POST(req: Request) {
     // `next` : chemin interne uniquement (ex. /rejoindre/[token] — invitation d'organisation).
     const next = String(form.get('next') ?? '');
     const dest = next.startsWith('/') && !next.startsWith('//') ? next : '/compte';
-    return NextResponse.redirect(new URL(dest, req.url), 303);
+    return NextResponse.redirect(makeUrl(dest), 303);
   } catch (e) {
     if ((e as { code?: string })?.code === 'P2002') return back(req, 'email_utilise');
     return back(req, 'erreur_serveur');

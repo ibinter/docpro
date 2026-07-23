@@ -4,9 +4,10 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { AuthError, requireUser } from '@/lib/auth';
 import { generateSecret } from '@/lib/totp';
+import { makeUrl } from '@/lib/redirect';
 
 function back(req: Request, params = '') {
-  return NextResponse.redirect(new URL(`/compte/securite${params}`, req.url), 303);
+  return NextResponse.redirect(makeUrl(`/compte/securite${params}`), 303);
 }
 
 export async function POST(req: Request) {
@@ -14,7 +15,7 @@ export async function POST(req: Request) {
   try {
     user = await requireUser();
   } catch (e) {
-    if (e instanceof AuthError) return NextResponse.redirect(new URL('/connexion', req.url), 303);
+    if (e instanceof AuthError) return NextResponse.redirect(makeUrl('/connexion'), 303);
     throw e;
   }
 

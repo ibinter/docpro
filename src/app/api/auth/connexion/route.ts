@@ -4,9 +4,10 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db';
 import { createSession } from '@/lib/auth';
 import { encodePending2fa, PENDING_2FA_COOKIE, PENDING_2FA_MAX_AGE } from '@/lib/totp';
+import { makeUrl } from '@/lib/redirect';
 
 function back(req: Request, code: string) {
-  return NextResponse.redirect(new URL(`/connexion?erreur=${code}`, req.url), 303);
+  return NextResponse.redirect(makeUrl(`/connexion?erreur=${code}`), 303);
 }
 
 export async function POST(req: Request) {
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
         fails: 0,
         exp: Math.floor(Date.now() / 1000) + PENDING_2FA_MAX_AGE,
       });
-      const res = NextResponse.redirect(new URL('/connexion/2fa', req.url), 303);
+      const res = NextResponse.redirect(makeUrl('/connexion/2fa'), 303);
       res.cookies.set(PENDING_2FA_COOKIE, token, {
         httpOnly: true,
         sameSite: 'lax',
@@ -50,10 +51,10 @@ export async function POST(req: Request) {
     await createSession(user.id, user.role);
     const nextParam = new URL(req.url).searchParams.get('next') ?? '';
     if (nextParam.startsWith('/') && !nextParam.startsWith('//')) {
-      return NextResponse.redirect(new URL(nextParam, req.url), 303);
+      return NextResponse.redirect(makeUrl(nextParam), 303);
     }
     const destination = user.role === 'admin' || user.role === 'superadmin' ? '/admin' : '/compte';
-    return NextResponse.redirect(new URL(destination, req.url), 303);
+    return NextResponse.redirect(makeUrl(destination), 303);
   } catch {
     return back(req, 'erreur_serveur');
   }

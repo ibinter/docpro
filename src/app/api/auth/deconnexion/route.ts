@@ -4,6 +4,7 @@
 import { NextResponse } from 'next/server';
 import { destroySession, getSessionUser } from '@/lib/auth';
 import { audit } from '@/lib/audit';
+import { makeUrl } from '@/lib/redirect';
 
 export async function POST(req: Request) {
   const user = await getSessionUser();
@@ -16,5 +17,5 @@ export async function POST(req: Request) {
     });
   }
   await destroySession();
-  return NextResponse.redirect(new URL('/', req.url), 303);
+  return NextResponse.redirect(makeUrl('/'), 303);
 }

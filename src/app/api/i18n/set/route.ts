@@ -1,6 +1,7 @@
 // GET /api/i18n/set?l=fr|en — pose le cookie de langue puis revient à la page d'origine.
 import { NextResponse } from 'next/server';
 import { LANG_COOKIE } from '@/lib/i18n';
+import { makeUrl } from '@/lib/redirect';
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
@@ -20,7 +21,7 @@ export async function GET(req: Request) {
     }
   }
 
-  const res = NextResponse.redirect(new URL(destination, req.url), 303);
+  const res = NextResponse.redirect(makeUrl(destination), 303);
   res.cookies.set(LANG_COOKIE, lang, {
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',

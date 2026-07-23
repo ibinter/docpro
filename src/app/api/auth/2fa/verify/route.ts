@@ -7,6 +7,7 @@ import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { createSession } from '@/lib/auth';
 import {
+import { makeUrl } from '@/lib/redirect';
   decodePending2fa,
   encodePending2fa,
   PENDING_2FA_COOKIE,
@@ -22,13 +23,13 @@ export async function POST(req: Request) {
   // Cookie absent, falsifié ou expiré → on repart de la connexion classique.
   if (!pending) {
     store.delete(PENDING_2FA_COOKIE);
-    return NextResponse.redirect(new URL('/connexion', req.url), 303);
+    return NextResponse.redirect(makeUrl('/connexion'), 303);
   }
 
   const user = await prisma.user.findUnique({ where: { id: pending.uid } });
   if (!user || !user.totpEnabled || !user.totpSecret) {
     store.delete(PENDING_2FA_COOKIE);
-    return NextResponse.redirect(new URL('/connexion', req.url), 303);
+    return NextResponse.redirect(makeUrl('/connexion'), 303);
   }
 
   let code = '';
@@ -43,14 +44,14 @@ export async function POST(req: Request) {
     await createSession(user.id, user.role);
     store.delete(PENDING_2FA_COOKIE);
     const destination = user.role === 'admin' || user.role === 'superadmin' ? '/admin' : '/compte';
-    return NextResponse.redirect(new URL(destination, req.url), 303);
+    return NextResponse.redirect(makeUrl(destination), 303);
   }
 
   // Échec : compteur dans le cookie signé — 3 tentatives maximum.
   const fails = pending.fails + 1;
   if (fails >= PENDING_2FA_MAX_FAILS) {
     store.delete(PENDING_2FA_COOKIE);
-    return NextResponse.redirect(new URL('/connexion/2fa?verrouille=1', req.url), 303);
+    return NextResponse.redirect(makeUrl('/connexion/2fa?verrouille=1'), 303);
   }
 
   const remainingSeconds = Math.max(1, Math.floor(pending.exp - Date.now() / 1000));
@@ -61,5 +62,5 @@ export async function POST(req: Request) {
     maxAge: remainingSeconds,
     path: '/',
   });
-  return NextResponse.redirect(new URL('/connexion/2fa?erreur=code_invalide', req.url), 303);
+  return NextResponse.redirect(makeUrl('/connexion/2fa?erreur=code_invalide'), 303);
 }
