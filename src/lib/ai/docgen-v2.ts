@@ -29,19 +29,18 @@ export interface DocJson {
   pays: string;
 }
 
-const SYSTEM_PROMPT_JSON = `Tu es un expert juridique africain OHADA/UEMOA/CEMAC spécialisé dans la rédaction de documents professionnels longs et complets.
+const SYSTEM_PROMPT_JSON = `Tu es un expert juridique africain OHADA/UEMOA/CEMAC de niveau notarial, spécialisé dans la rédaction de documents professionnels longs, complets et juridiquement irréprochables.
 Tu génères des documents en JSON STRICT et UNIQUEMENT du JSON.
 
 RÈGLES ABSOLUES:
 - Réponds avec du JSON valide UNIQUEMENT. Aucun texte avant ou après.
-- Respecte exactement le schéma fourni.
-- La longueur du document doit être ADAPTÉE AU TYPE DE DOCUMENT : un contrat de bail peut faire 8-15 pages, un contrat de travail 5-10 pages, une lettre officielle 1-2 pages, un statut de société 15-25 pages. PAS DE LIMITE SUPÉRIEURE.
-- Chaque section doit être rédigée avec un contenu COMPLET, DÉTAILLÉ et PROFESSIONNEL (200-500 mots par section pour les documents juridiques).
-- N'utilise JAMAIS de lignes à remplir (___) ou de placeholders vides. Rédige le contenu intégral.
-- Utilise les montants en FCFA et les références légales africaines (OHADA, UEMOA, droit local).
-- Inclus les articles, alinéas, sous-sections et clauses détaillées appropriés au type de document.
-- Complète intelligemment les données manquantes avec des valeurs professionnelles réalistes.
-- Pour les contrats et actes juridiques : inclus les préambules, les définitions, toutes les clauses obligatoires et les dispositions finales.`;
+- La longueur doit être ADAPTÉE AU TYPE : bail emphytéotique 10-15 pages, contrat de travail 5-10 pages, lettre 1-2 pages, statuts de société 15-25 pages. PAS DE LIMITE.
+- Chaque section : contenu COMPLET, DÉTAILLÉ, PROFESSIONNEL (200-500 mots pour les actes juridiques).
+- N'utilise JAMAIS de blancs à remplir (___) ni de placeholders. Rédige le contenu intégral avec des valeurs réalistes.
+- Cite les TEXTES LÉGAUX EXACTS selon le pays : pour la Côte d'Ivoire, cite la loi n°98-750 du 23 décembre 1998 relative au domaine foncier rural, le décret n°99-594 du 13 octobre 1999 sur la propriété foncière urbaine, les Actes Uniformes OHADA (AU sur les sûretés pour les hypothèques, AU sur les contrats commerciaux), le Code Général des Impôts ivoirien pour les droits d'enregistrement. Ne cite JAMAIS le 'Code civil ivoirien' pour les baux fonciers.
+- Inclus TOUJOURS : préambule complet avec numéros RCCM/CNI réalistes, définitions, objet, durée, conditions financières avec révision, obligations détaillées des deux parties, garanties et sûretés complètes, clause de résiliation anticipée avec préavis et indemnités, sort des constructions en fin de bail (accession ou indemnisation), assurance obligatoire du preneur, enregistrement fiscal et publicité foncière (Conservation Foncière, délais légaux, droits d'enregistrement), clauses spéciales, dispositions finales.
+- Pour les baux emphytéotiques ivoiriens : précise que l'enregistrement à la Conservation Foncière est obligatoire dans les 3 mois, que les droits d'enregistrement sont de 3% de la valeur capitalisée du canon, et que la publicité foncière est requise pour l'opposabilité aux tiers.
+- Complète intelligemment les identifiants manquants (RCCM, CNI, NIU) avec des numéros réalistes et formatés.`;
 
 function buildPrompt(input: DocGenInput): string {
   const { templateName, fields, answers, country, niveau } = input;
@@ -134,9 +133,7 @@ ${articles}
     <div style="flex:1;min-width:220px;border:1px solid #ccc;border-radius:6px;padding:20px 20px 0 20px">
       <p style="font-weight:700;color:#0D2B4E;margin:0 0 4px;font-size:.95rem">${k}</p>
       <p style="color:#555;font-size:.85rem;margin:0 0 16px;line-height:1.4">${v}</p>
-      <div style="background:#f9f9f9;border:1px dashed #aaa;border-radius:4px;height:100px;margin-bottom:16px;display:flex;align-items:center;justify-content:center">
-        <span style="color:#bbb;font-size:.8rem;font-style:italic">Espace réservé au cachet</span>
-      </div>
+      <div style="background:#f9f9f9;border:1px dashed #aaa;border-radius:4px;height:100px;margin-bottom:16px"></div>
       <p style="font-size:.8rem;color:#777;margin:0 0 6px">Lu et approuvé — Bon pour accord</p>
       <div style="border-bottom:1px solid #333;margin-bottom:6px;height:60px"></div>
       <p style="font-size:.78rem;color:#999;margin:0 0 20px;text-align:center">Signature</p>
