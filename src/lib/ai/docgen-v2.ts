@@ -37,10 +37,14 @@ RÈGLES ABSOLUES:
 - La longueur doit être ADAPTÉE AU TYPE : bail emphytéotique 10-15 pages, contrat de travail 5-10 pages, lettre 1-2 pages, statuts de société 15-25 pages. PAS DE LIMITE.
 - Chaque section : contenu COMPLET, DÉTAILLÉ, PROFESSIONNEL (200-500 mots pour les actes juridiques).
 - N'utilise JAMAIS de blancs à remplir (___) ni de placeholders. Rédige le contenu intégral avec des valeurs réalistes.
-- Cite les TEXTES LÉGAUX EXACTS selon le pays : pour la Côte d'Ivoire, cite la loi n°98-750 du 23 décembre 1998 relative au domaine foncier rural, le décret n°99-594 du 13 octobre 1999 sur la propriété foncière urbaine, les Actes Uniformes OHADA (AU sur les sûretés pour les hypothèques, AU sur les contrats commerciaux), le Code Général des Impôts ivoirien pour les droits d'enregistrement. Ne cite JAMAIS le 'Code civil ivoirien' pour les baux fonciers.
-- Inclus TOUJOURS : préambule complet avec numéros RCCM/CNI réalistes, définitions, objet, durée, conditions financières avec révision, obligations détaillées des deux parties, garanties et sûretés complètes, clause de résiliation anticipée avec préavis et indemnités, sort des constructions en fin de bail (accession ou indemnisation), assurance obligatoire du preneur, enregistrement fiscal et publicité foncière (Conservation Foncière, délais légaux, droits d'enregistrement), clauses spéciales, dispositions finales.
-- Pour les baux emphytéotiques ivoiriens : précise que l'enregistrement à la Conservation Foncière est obligatoire dans les 3 mois, que les droits d'enregistrement sont de 3% de la valeur capitalisée du canon, et que la publicité foncière est requise pour l'opposabilité aux tiers.
-- Complète intelligemment les identifiants manquants (RCCM, CNI, NIU) avec des numéros réalistes et formatés.`;
+- RÉFÉRENCES LÉGALES EXACTES selon le pays et le TYPE DE DOCUMENT :
+  * Bail emphytéotique URBAIN en Côte d'Ivoire : décret n°99-594 du 13/10/1999 fixant les conditions de la propriété foncière urbaine, décret n°71-74 du 16/02/1971 relatif aux procédures domaniales et foncières, loi n°60-366 du 14/11/1960 portant Code civil ivoirien (art. 527 et ss. sur la propriété). La loi n°98-750 concerne le domaine foncier RURAL — NE PAS la citer pour le foncier urbain.
+  * Pour les sûretés (hypothèque) : Acte Uniforme OHADA du 15/12/2010 portant organisation des sûretés (AUS).
+  * Pour le bail commercial/emphytéotique commercial : l'AUDCG (Acte Uniforme sur le Droit Commercial Général) peut s'appliquer aux baux commerciaux ; préciser la nature exacte du bail.
+  * Droits d'enregistrement : CGI ivoirien, art. 708 et ss. — 3% de la valeur capitalisée du canon pour les baux de longue durée.
+- FORMALITÉS OBLIGATOIRES pour bail emphytéotique >18 ans : enregistrement à la Conservation Foncière d'Abidjan dans les 3 mois suivant la signature, publication foncière requise pour opposabilité aux tiers, droits d'enregistrement dus.
+- Inclus TOUJOURS : numéros RCCM/CNI/NIU réalistes formatés (ex: CI-ABJ-2019-B-12345), clause force majeure, clause médiation/arbitrage CCJA, clause d'éviction, garantie d'absence de charges.
+- Génère du français IRRÉPROCHABLE : zéro faute de frappe, langage notarial précis.`;
 
 function buildPrompt(input: DocGenInput): string {
   const { templateName, fields, answers, country, niveau } = input;
