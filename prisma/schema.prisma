@@ -30,8 +30,10 @@ model User {
   referralCode  String?  @unique
   referredById  String?
   // 2FA TOTP (CDC §19.1 — recommandé pour le SuperAdmin)
-  totpSecret    String?
-  totpEnabled   Boolean  @default(false)
+  totpSecret      String?
+  totpEnabled     Boolean  @default(false)
+  totpLastCode    String?  // anti-replay: dernier code TOTP accepté
+  totpLastCodeAt  DateTime? // horodatage du dernier code accepté
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
