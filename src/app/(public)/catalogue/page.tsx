@@ -1,5 +1,5 @@
-﻿// Catalogue public des modÃ¨les de documents (DocumentTemplate actifs)
-// + recherche plein texte (?q=) sur nom, description et catÃ©gorie.
+?// Catalogue public des modèles de documents (DocumentTemplate actifs)
+// + recherche plein texte (?q=) sur nom, description et catégorie.
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { formatFcfa, formatUsd, DEFAULT_PRICE_GRID, type Classe } from '@/lib/pricing';
@@ -11,9 +11,9 @@ import AddToCartButton from '@/components/AddToCartButton';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Catalogue de documents â€” IBIG DocPro',
+  title: 'Catalogue de documents �?? IBIG DocPro',
   description:
-    'CV, contrats, statuts, factures, procurationsâ€¦ Plus de 1 200 documents professionnels conformes aux lois de votre pays.',
+    'CV, contrats, statuts, factures, procurations�?� Plus de 1 200 documents professionnels conformes aux lois de votre pays.',
 };
 
 const CATEGORY_CODES = [
@@ -40,16 +40,16 @@ const CATEGORY_CODES = [
 
 const VALID_CLASSES: Classe[] = ['A', 'B', 'C'];
 
-/** Affiche "Ã  partir de X FCFA Â· $Y" selon la classe du template (prix Standard). */
+/** Affiche "à partir de X FCFA · $Y" selon la classe du template (prix Standard). */
 function priceFrom(classe: string | null, fallbackPrice: number, currency: string): string {
   const cls = VALID_CLASSES.includes(classe as Classe) ? (classe as Classe) : null;
   if (cls) {
     const fcfa = DEFAULT_PRICE_GRID[cls].standard;
-    return `Ã€ partir de ${formatFcfa(fcfa)} Â· ${formatUsd(fcfa)}`;
+    return `�? partir de ${formatFcfa(fcfa)} · ${formatUsd(fcfa)}`;
   }
   // fallback : prix fixe du template
   const isFcfa = currency === 'XOF' || currency === 'FCFA';
-  if (isFcfa) return `${formatFcfa(fallbackPrice)} Â· ${formatUsd(fallbackPrice)}`;
+  if (isFcfa) return `${formatFcfa(fallbackPrice)} · ${formatUsd(fallbackPrice)}`;
   return `${fallbackPrice} ${currency}`;
 }
 
@@ -64,7 +64,7 @@ function ClasseBadge({ classe }: { classe: string | null }) {
       background: colors[classe as Classe] + '18',
       color: colors[classe as Classe], border: `1px solid ${colors[classe as Classe]}40`,
     }}>
-      {classe} Â· {labels[classe as Classe]}
+      {classe} · {labels[classe as Classe]}
     </span>
   );
 }
@@ -132,11 +132,11 @@ export default async function CataloguePage({
         >
           <div>
             <span style={{ color: '#fff', fontWeight: 700, fontSize: '1.05rem' }}>
-              Documents Ã  partir de{' '}
-              <span style={{ color: '#FFD700' }}>100 FCFA Â· $0.17</span>
+              Documents à partir de{' '}
+              <span style={{ color: '#FFD700' }}>100 FCFA · $0.17</span>
             </span>
             <span style={{ color: 'rgba(255,255,255,.7)', fontSize: '.85rem', marginLeft: 12 }}>
-              Standard Â· Pro Â· Expert â€” Rechargez et Ã©conomisez jusqu'Ã  +30 %
+              Standard · Pro · Expert �?? Rechargez et économisez jusqu'à +30 %
             </span>
           </div>
           <Link href="/tarifs" className="btn btn-gold btn-sm" style={{ whiteSpace: 'nowrap' }}>
@@ -189,7 +189,7 @@ export default async function CataloguePage({
           }
         </p>
 
-        {/* Filtres catÃ©gorie */}
+        {/* Filtres catégorie */}
         <div className="flex mb-3" style={{ flexWrap: 'wrap', gap: 8 }}>
           <Link href={catalogueUrl(null, recherche)} className={`btn btn-sm ${!filtre ? 'btn-primary' : 'btn-outline'}`}>
             {t.catalogue.toutesCategories}
@@ -205,11 +205,11 @@ export default async function CataloguePage({
           ))}
         </div>
 
-        {/* Ã‰tat vide */}
+        {/* �?tat vide */}
         {templates.length === 0 && (
           recherche ? (
             <div className="card text-center" style={{ padding: '48px 24px' }}>
-              <div style={{ fontSize: '2.4rem' }}>ðŸ”Ž</div>
+              <div style={{ fontSize: '2.4rem' }}>�???</div>
               <h2 style={{ fontSize: '1.2rem' }} className="mt-1">
                 {t.catalogue.aucunResultatTitre(recherche)}
               </h2>
@@ -224,7 +224,7 @@ export default async function CataloguePage({
           )
         )}
 
-        {/* Grille par catÃ©gorie */}
+        {/* Grille par catégorie */}
         {[...parCategorie.entries()]
           .filter(([, list]) => list.length > 0)
           .map(([code, list]) => (
@@ -252,7 +252,7 @@ export default async function CataloguePage({
                           {priceFrom(tpl.classe, tpl.price, tpl.currency)}
                         </strong>
                         {tpl.templateType === 'excel' && (
-                          <span style={{ fontSize: '.7rem', color: '#2e7d32', marginLeft: 6 }}>ðŸ“Š Excel</span>
+                          <span style={{ fontSize: '.7rem', color: '#2e7d32', marginLeft: 6 }}>�??? Excel</span>
                         )}
                       </div>
                       <div className="flex" style={{ gap: 6 }}>

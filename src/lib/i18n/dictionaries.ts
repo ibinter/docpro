@@ -1,6 +1,6 @@
-﻿// Dictionnaires FR/EN des pages publiques (CDC Â§1 â€” interface bilingue).
-// DonnÃ©es pures, sans dÃ©pendance serveur â€” les NOMS de templates/forfaits (contenu BDD)
-// ne sont PAS traduits ici : seuls les libellÃ©s d'interface le sont.
+?// Dictionnaires FR/EN des pages publiques (CDC §1 �?? interface bilingue).
+// Données pures, sans dépendance serveur �?? les NOMS de templates/forfaits (contenu BDD)
+// ne sont PAS traduits ici : seuls les libellés d'interface le sont.
 
 export type Lang = 'fr' | 'en';
 
@@ -11,123 +11,123 @@ const fr = {
     adminConsole: 'Console Admin',
     monEspace: 'Mon espace',
     connexion: 'Connexion',
-    inscription: 'CrÃ©er un compte',
+    inscription: 'Créer un compte',
   },
   hero: {
-    titre: 'Chaque document, chaque rÃªve, chaque ambition â€” gÃ©nÃ©rÃ©s en quelques secondes',
+    titre: 'Chaque document, chaque rêve, chaque ambition �?? générés en quelques secondes',
     sousTitre:
-      'CV, contrats, statuts de sociÃ©tÃ©, factures, lettres de motivationâ€¦ Des documents professionnels irrÃ©prochables, conformes aux lois de votre pays, Ã  partir de 100 FCFA Â· $0.17.',
+      'CV, contrats, statuts de société, factures, lettres de motivation�?� Des documents professionnels irréprochables, conformes aux lois de votre pays, à partir de 100 FCFA · $0.17.',
     ctaCatalogue: 'Explorer le catalogue',
-    ctaInscription: 'CrÃ©er un compte gratuit',
+    ctaInscription: 'Créer un compte gratuit',
   },
   etapes: {
-    titre: 'Comment Ã§a marche ?',
-    sousTitre: "De l'idÃ©e au document final en moins de 60 secondes, en 4 Ã©tapes.",
+    titre: 'Comment ça marche ?',
+    sousTitre: "De l'idée au document final en moins de 60 secondes, en 4 étapes.",
     liste: [
       {
         titre: 'Choisissez votre document',
         texte:
-          'Parcourez le catalogue visuel : CV, contrats, statuts, facturesâ€¦ avec aperÃ§u, prix et dÃ©lai de gÃ©nÃ©ration. Sans inscription obligatoire.',
+          'Parcourez le catalogue visuel : CV, contrats, statuts, factures�?� avec aperçu, prix et délai de génération. Sans inscription obligatoire.',
       },
       {
-        titre: 'RÃ©pondez au questionnaire IA',
+        titre: 'Répondez au questionnaire IA',
         texte:
-          "ChatDoc, l'assistant conversationnel, vous pose des questions simples en langage naturel ou via un formulaire guidÃ©.",
+          "ChatDoc, l'assistant conversationnel, vous pose des questions simples en langage naturel ou via un formulaire guidé.",
       },
       {
-        titre: 'GÃ©nÃ©rez et prÃ©visualisez',
+        titre: 'Générez et prévisualisez',
         texte:
-          'Votre document est gÃ©nÃ©rÃ© en temps rÃ©el. Modifiez, rÃ©gÃ©nÃ©rez ou changez de style autant de fois que nÃ©cessaire.',
+          'Votre document est généré en temps réel. Modifiez, régénérez ou changez de style autant de fois que nécessaire.',
       },
       {
-        titre: 'Payez et tÃ©lÃ©chargez',
+        titre: 'Payez et téléchargez',
         texte:
-          'Mobile Money, carte, virement ou espÃ¨ces. TÃ©lÃ©chargement sÃ©curisÃ© par lien unique valable 24 h, aux formats PDF, DOCX, ODT ou HTML.',
+          'Mobile Money, carte, virement ou espèces. Téléchargement sécurisé par lien unique valable 24 h, aux formats PDF, DOCX, ODT ou HTML.',
       },
     ],
   },
   features: {
     titre: 'Une plateforme unique au monde',
-    sousTitre: 'Des fonctionnalitÃ©s que vous ne trouverez nulle part ailleurs.',
+    sousTitre: 'Des fonctionnalités que vous ne trouverez nulle part ailleurs.',
     liste: [
       {
-        icone: 'ðŸ’¬',
+        icone: '�??�',
         titre: 'Assistant ChatDoc',
         texte:
-          "DÃ©crivez votre besoin en langage naturel : ChatDoc choisit le modÃ¨le optimal, l'adapte Ã  votre pays et produit un document personnalisÃ©.",
+          "Décrivez votre besoin en langage naturel : ChatDoc choisit le modèle optimal, l'adapte à votre pays et produit un document personnalisé.",
       },
       {
-        icone: 'âš–ï¸',
-        titre: 'Adaptation lÃ©gale par pays',
+        icone: '�??️',
+        titre: 'Adaptation légale par pays',
         texte:
-          'Base lÃ©gale mondiale : chaque document est conforme aux lois du pays sÃ©lectionnÃ© (OHADA pour lâ€™Afrique, loi Alur pour la Franceâ€¦).',
+          'Base légale mondiale : chaque document est conforme aux lois du pays sélectionné (OHADA pour l�??Afrique, loi Alur pour la France�?�).',
       },
       {
-        icone: 'ðŸŒ',
-        titre: 'Traduction simultanÃ©e',
+        icone: '�??�',
+        titre: 'Traduction simultanée',
         texte:
-          'GÃ©nÃ©rez le mÃªme document en plusieurs langues en une seule opÃ©ration : CV en franÃ§ais + anglais + espagnol simultanÃ©ment.',
+          'Générez le même document en plusieurs langues en une seule opération : CV en français + anglais + espagnol simultanément.',
       },
       {
-        icone: 'â­',
-        titre: 'Score de qualitÃ©',
+        icone: '⭐',
+        titre: 'Score de qualité',
         texte:
-          "Chaque document est notÃ© automatiquement (lisibilitÃ©, conformitÃ© lÃ©gale, attractivitÃ© pour les recruteurs) avec des suggestions d'amÃ©lioration.",
+          "Chaque document est noté automatiquement (lisibilité, conformité légale, attractivité pour les recruteurs) avec des suggestions d'amélioration.",
       },
       {
-        icone: 'ðŸ”’',
-        titre: 'QR de vÃ©rification',
+        icone: '�???',
+        titre: 'QR de vérification',
         texte:
-          "Chaque document porte un QR code de vÃ©rification d'authenticitÃ© : quiconque peut contrÃ´ler qu'il est authentique et non falsifiÃ©.",
+          "Chaque document porte un QR code de vérification d'authenticité : quiconque peut contrôler qu'il est authentique et non falsifié.",
       },
       {
-        icone: 'ðŸ‘¤',
+        icone: '�??�',
         titre: 'Profil intelligent',
         texte:
-          'Remplissez votre profil une seule fois : tous vos futurs documents sont prÃ©-remplis automatiquement. Fin de la saisie rÃ©pÃ©titive.',
+          'Remplissez votre profil une seule fois : tous vos futurs documents sont pré-remplis automatiquement. Fin de la saisie répétitive.',
       },
     ],
   },
   pricing: {
-    titre: 'Tarification Ã  l\'acte â€” simple et transparente',
+    titre: 'Tarification à l\'acte �?? simple et transparente',
     sousTitre: 'Payez uniquement ce que vous utilisez. Pas d\'abonnement obligatoire.',
-    bientot: 'Les tarifs seront bientÃ´t disponibles.',
+    bientot: 'Les tarifs seront bientôt disponibles.',
     comparer: 'Explorer le catalogue',
   },
   catalogue: {
     titre: 'Catalogue de documents',
     sousTitre: 'Des documents professionnels conformes aux lois de votre pays.',
-    packsBanner: 'ðŸ“¦ DÃ©couvrez nos packs Ã©conomiques â€” plusieurs documents Ã  prix rÃ©duit',
-    packsBtn: 'Voir les packs â†’',
-    rechercherPlaceholder: 'Rechercher un document : CV, contrat, facture, bailâ€¦',
+    packsBanner: '�??� Découvrez nos packs économiques �?? plusieurs documents à prix réduit',
+    packsBtn: 'Voir les packs �??',
+    rechercherPlaceholder: 'Rechercher un document : CV, contrat, facture, bail�?�',
     rechercherAria: 'Rechercher un document',
-    rechercherBtn: 'ðŸ” Rechercher',
+    rechercherBtn: '�??� Rechercher',
     effacer: 'Effacer',
-    resultatsPour: (n: number, q: string) => `${n} rÃ©sultat${n > 1 ? 's' : ''} pour Â« ${q} Â»`,
-    dansCategorie: (c: string) => ` dans Â« ${c} Â»`,
-    modelesDisponibles: (n: number) => `${n} modÃ¨le${n > 1 ? 's' : ''} disponible${n > 1 ? 's' : ''}`,
-    toutesCategories: 'Toutes les catÃ©gories',
-    aucunResultatTitre: (q: string) => `Aucun document ne correspond Ã  Â« ${q} Â»`,
+    resultatsPour: (n: number, q: string) => `${n} résultat${n > 1 ? 's' : ''} pour « ${q} »`,
+    dansCategorie: (c: string) => ` dans « ${c} »`,
+    modelesDisponibles: (n: number) => `${n} modèle${n > 1 ? 's' : ''} disponible${n > 1 ? 's' : ''}`,
+    toutesCategories: 'Toutes les catégories',
+    aucunResultatTitre: (q: string) => `Aucun document ne correspond à « ${q} »`,
     aucunResultatTexte:
-      'Essayez un autre mot-clÃ© (ex. Â« contrat Â», Â« facture Â», Â« CV Â») ou parcourez toutes les catÃ©gories.',
+      'Essayez un autre mot-clé (ex. « contrat », « facture », « CV ») ou parcourez toutes les catégories.',
     effacerRecherche: 'Effacer la recherche',
     toutLeCatalogue: 'Tout le catalogue',
-    aucunDocumentCategorie: 'Aucun document disponible dans cette catÃ©gorie pour le moment.',
-    generer: 'GÃ©nÃ©rer',
+    aucunDocumentCategorie: 'Aucun document disponible dans cette catégorie pour le moment.',
+    generer: 'Générer',
     categories: {
       rh_emploi: 'RH & Emploi',
       juridique_admin: 'Juridique & Administratif',
       commercial: 'Commercial & Marketing',
       communication: 'Communication',
-      comptabilite_audit: 'Comptabilité & Audit',
+      comptabilite_audit: 'Comptabilit� & Audit',
       finance_banque: 'Finance & Banque',
       informatique_tech: 'Informatique & Tech',
       gestion_management: 'Gestion & Management',
       gestion_projet: 'Gestion de Projet',
       qhse: 'QHSE',
       entrepreneuriat: 'Entrepreneuriat',
-      academique: 'Académique',
-      sante: 'Santé',
+      academique: 'Acad�mique',
+      sante: 'Sant�',
       immobilier: 'Immobilier',
       association: 'Association',
       btp_construction: 'BTP & Construction',
@@ -139,15 +139,15 @@ const fr = {
   tarifs: {
     titre: 'Tarifs',
     intro:
-      "Payez uniquement ce que vous utilisez, dÃ¨s 100 FCFA. Rechargez votre portefeuille et Ã©conomisez jusqu'Ã  +30 %.",
-    bientot: 'Les forfaits seront bientÃ´t disponibles.',
+      "Payez uniquement ce que vous utilisez, dès 100 FCFA. Rechargez votre portefeuille et économisez jusqu'à +30 %.",
+    bientot: 'Les forfaits seront bientôt disponibles.',
     essaiGratuit: (jours: number) => `Essai gratuit ${jours} jours`,
     essaiNote: 'Sans engagement, sans moyen de paiement.',
-    comparatif: 'Comparatif dÃ©taillÃ©',
-    caracteristique: 'CaractÃ©ristique',
+    comparatif: 'Comparatif détaillé',
+    caracteristique: 'Caractéristique',
     prix: 'Prix',
     docsParMois: 'Documents par mois',
-    illimite: 'IllimitÃ©',
+    illimite: 'Illimité',
     stockage: 'Stockage cloud',
     utilisateurs: 'Utilisateurs',
     essai: 'Essai gratuit',
@@ -156,26 +156,26 @@ const fr = {
     souscrire: 'Souscrire',
     ponctuelTitre: "Besoin d'un document ponctuel ?",
     ponctuelTexte:
-      "Paiement Ã  l'acte, sans abonnement. Chaque document du catalogue Ã  partir de 100 FCFA Â· $0.17. Rechargez votre portefeuille et Ã©conomisez jusqu'Ã  +30 %.",
+      "Paiement à l'acte, sans abonnement. Chaque document du catalogue à partir de 100 FCFA · $0.17. Rechargez votre portefeuille et économisez jusqu'à +30 %.",
     voirCatalogue: 'Voir le catalogue',
   },
   footer: {
     slogan:
-      'La plateforme mondiale de gÃ©nÃ©ration intelligente de documents professionnels, conformes aux lois de votre pays.',
+      'La plateforme mondiale de génération intelligente de documents professionnels, conformes aux lois de votre pays.',
     navigation: 'Navigation',
     catalogue: 'Catalogue de documents',
     tarifs: 'Tarifs & forfaits',
-    inscription: 'CrÃ©er un compte',
+    inscription: 'Créer un compte',
     connexion: 'Connexion',
     contact: 'Contact',
-    droits: 'Â© IBIG SARL 2026 â€” Tous droits rÃ©servÃ©s.',
+    droits: '© IBIG SARL 2026 �?? Tous droits réservés.',
     cgu: 'CGU',
-    confidentialite: 'ConfidentialitÃ©',
-    mentions: 'Mentions lÃ©gales',
+    confidentialite: 'Confidentialité',
+    mentions: 'Mentions légales',
   },
   auth: {
     connexionTitre: 'Connexion',
-    inscriptionTitre: 'CrÃ©er un compte',
+    inscriptionTitre: 'Créer un compte',
     email: 'Adresse email',
     motDePasse: 'Mot de passe',
     seConnecter: 'Se connecter',
@@ -194,9 +194,9 @@ const en: Dict = {
     inscription: 'Create an account',
   },
   hero: {
-    titre: 'Every document, every dream, every ambition â€” generated in seconds',
+    titre: 'Every document, every dream, every ambition �?? generated in seconds',
     sousTitre:
-      'Resumes, contracts, company bylaws, invoices, cover lettersâ€¦ Flawless professional documents, compliant with the laws of your country, starting at 50 FCFA.',
+      'Resumes, contracts, company bylaws, invoices, cover letters�?� Flawless professional documents, compliant with the laws of your country, starting at 50 FCFA.',
     ctaCatalogue: 'Explore the catalog',
     ctaInscription: 'Create a free account',
   },
@@ -207,7 +207,7 @@ const en: Dict = {
       {
         titre: 'Choose your document',
         texte:
-          'Browse the visual catalog: resumes, contracts, bylaws, invoicesâ€¦ with preview, price and generation time. No sign-up required.',
+          'Browse the visual catalog: resumes, contracts, bylaws, invoices�?� with preview, price and generation time. No sign-up required.',
       },
       {
         titre: 'Answer the AI questionnaire',
@@ -231,37 +231,37 @@ const en: Dict = {
     sousTitre: 'Features you will not find anywhere else.',
     liste: [
       {
-        icone: 'ðŸ’¬',
+        icone: '�??�',
         titre: 'ChatDoc assistant',
         texte:
           'Describe your need in natural language: the AI picks the best template, adapts it to your country and generates a personalized document.',
       },
       {
-        icone: 'âš–ï¸',
+        icone: '�??️',
         titre: 'Country-specific legal adaptation',
         texte:
-          'Global legal base: every document complies with the laws of the selected country (OHADA for Africa, Alur law for Franceâ€¦).',
+          'Global legal base: every document complies with the laws of the selected country (OHADA for Africa, Alur law for France�?�).',
       },
       {
-        icone: 'ðŸŒ',
+        icone: '�??�',
         titre: 'Simultaneous translation',
         texte:
           'Generate the same document in several languages in a single operation: a resume in French + English + Spanish at once.',
       },
       {
-        icone: 'â­',
+        icone: '⭐',
         titre: 'AI quality score',
         texte:
           'The AI rates your document (readability, legal compliance, appeal to recruiters) and suggests improvements.',
       },
       {
-        icone: 'ðŸ”’',
+        icone: '�???',
         titre: 'Verification QR code',
         texte:
           'Every document carries an authenticity verification QR code: anyone can check that it is genuine and unaltered.',
       },
       {
-        icone: 'ðŸ‘¤',
+        icone: '�??�',
         titre: 'Smart profile',
         texte:
           'Fill in your profile once: all your future documents are pre-filled automatically. No more repetitive typing.',
@@ -277,11 +277,11 @@ const en: Dict = {
   catalogue: {
     titre: 'Document catalog',
     sousTitre: 'Professional AI-generated documents, adapted to the laws of your country.',
-    packsBanner: 'ðŸ“¦ Discover our value packs â€” several documents at a reduced price',
-    packsBtn: 'View packs â†’',
-    rechercherPlaceholder: 'Search for a document: resume, contract, invoice, leaseâ€¦',
+    packsBanner: '�??� Discover our value packs �?? several documents at a reduced price',
+    packsBtn: 'View packs �??',
+    rechercherPlaceholder: 'Search for a document: resume, contract, invoice, lease�?�',
     rechercherAria: 'Search for a document',
-    rechercherBtn: 'ðŸ” Search',
+    rechercherBtn: '�??� Search',
     effacer: 'Clear',
     resultatsPour: (n: number, q: string) => `${n} result${n > 1 ? 's' : ''} for "${q}"`,
     dansCategorie: (c: string) => ` in "${c}"`,
@@ -348,7 +348,7 @@ const en: Dict = {
     inscription: 'Create an account',
     connexion: 'Sign in',
     contact: 'Contact',
-    droits: 'Â© IBIG SARL 2026 â€” All rights reserved.',
+    droits: '© IBIG SARL 2026 �?? All rights reserved.',
     cgu: 'Terms of use',
     confidentialite: 'Privacy',
     mentions: 'Legal notice',
