@@ -1,4 +1,4 @@
-?// Landing page de vente IBIG DocPro — page vendeur complète v2
+﻿// Landing page de vente IBIG DocPro — page vendeur complète v2
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { formatFcfa, formatUsd, DEFAULT_PRICE_GRID, RECHARGE_TIERS } from '@/lib/pricing';
@@ -8,25 +8,25 @@ import SiteFooter from '@/components/public/SiteFooter';
 export const dynamic = 'force-dynamic';
 
 const CATEGORIES_META: Record<string, { emoji: string; label: string }> = {
-  commercial:           { emoji: '?', label: 'Commercial & Marketing' },
-  juridique_admin:      { emoji: '??', label: 'Juridique & Administratif' },
-  agro_environnement:   { emoji: '?', label: 'Agro & Environnement' },
-  sante:                { emoji: '?', label: 'Sant�' },
-  association:          { emoji: '?', label: 'Association & ONG' },
-  btp_construction:     { emoji: '??', label: 'BTP & Construction' },
-  rh_emploi:            { emoji: '?', label: 'RH & Emploi' },
-  informatique_tech:    { emoji: '?', label: 'Informatique & Tech' },
-  academique:           { emoji: '?', label: 'Acad�mique' },
-  transport_logistique: { emoji: '?', label: 'Transport & Logistique' },
-  finance_banque:       { emoji: '?', label: 'Finance & Banque' },
-  immobilier:           { emoji: '?', label: 'Immobilier' },
-  comptabilite_audit:   { emoji: '?', label: 'Comptabilit� & Audit' },
-  communication:        { emoji: '?', label: 'Communication' },
-  entrepreneuriat:      { emoji: '?', label: 'Entrepreneuriat' },
-  gestion_management:   { emoji: '?', label: 'Gestion & Management' },
-  assurance:            { emoji: '??', label: 'Assurance' },
-  qhse:                 { emoji: '?', label: 'QHSE' },
-  gestion_projet:       { emoji: '?', label: 'Gestion de Projet' },
+  commercial:           { emoji: '💼', label: 'Commercial & Marketing' },
+  juridique_admin:      { emoji: '⚖️', label: 'Juridique & Administratif' },
+  agro_environnement:   { emoji: '🌱', label: 'Agro & Environnement' },
+  sante:                { emoji: '🏥', label: 'Santé' },
+  association:          { emoji: '🤝', label: 'Association & ONG' },
+  btp_construction:     { emoji: '🏗️', label: 'BTP & Construction' },
+  rh_emploi:            { emoji: '👥', label: 'RH & Emploi' },
+  informatique_tech:    { emoji: '💻', label: 'Informatique & Tech' },
+  academique:           { emoji: '🎓', label: 'Académique' },
+  transport_logistique: { emoji: '🚚', label: 'Transport & Logistique' },
+  finance_banque:       { emoji: '🏦', label: 'Finance & Banque' },
+  immobilier:           { emoji: '🏠', label: 'Immobilier' },
+  comptabilite_audit:   { emoji: '📊', label: 'Comptabilité & Audit' },
+  communication:        { emoji: '📣', label: 'Communication' },
+  entrepreneuriat:      { emoji: '🚀', label: 'Entrepreneuriat' },
+  gestion_management:   { emoji: '🎯', label: 'Gestion & Management' },
+  assurance:            { emoji: '🛡️', label: 'Assurance' },
+  qhse:                 { emoji: '✅', label: 'QHSE' },
+  gestion_projet:       { emoji: '📅', label: 'Gestion de Projet' },
 };
 
 
@@ -75,9 +75,9 @@ const TEMOIGNAGES = [
 
 const AVANTAGES = [
   { emoji: '⚡', titre: 'Disponible 24h/24', texte: 'Générez votre document à tout moment, sans rendez-vous ni délai d\'attente.' },
-  { emoji: '�?', titre: 'Adapté à votre pays', texte: 'Chaque document intègre les dispositions légales du pays sélectionné — OHADA, codes locaux, UEMOA, CEMAC.' },
-  { emoji: '�?', titre: '12 700+ mod�les pr�ts', texte: 'Contrats, CV, statuts, baux, business plans, QHSE, projets� 19 domaines, tous les documents courants de votre activit�.' },
-  { emoji: '�?�?', titre: 'Entièrement personnalisé', texte: 'Chaque document est adapté à vos informations spécifiques : parties, dates, clauses, secteur d\'activité.' },
+  { emoji: '🌍', titre: 'Adapté à votre pays', texte: 'Chaque document intègre les dispositions légales du pays sélectionné — OHADA, codes locaux, UEMOA, CEMAC.' },
+  { emoji: '📁', titre: '12 700+ modèles prêts', texte: 'Contrats, CV, statuts, baux, business plans, QHSE, projets… 19 domaines, tous les documents courants de votre activité.' },
+  { emoji: '✏️', titre: 'Entièrement personnalisé', texte: 'Chaque document est adapté à vos informations spécifiques : parties, dates, clauses, secteur d\'activité.' },
 ];
 
 export default async function HomePage() {
@@ -94,7 +94,7 @@ export default async function HomePage() {
     <>
       <SiteHeader />
 
-      {/* �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? HERO �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */}
+      {/* ════════════════════ HERO ════════════════════ */}
       <section style={{
         background: 'linear-gradient(135deg, #0D2B4E 0%, #1565C0 60%, #0D47A1 100%)',
         color: '#fff', padding: '64px 0 56px',
@@ -154,10 +154,10 @@ export default async function HomePage() {
         <div className="container">
           <div style={{ display: 'flex', justifyContent: 'center', gap: 48, flexWrap: 'wrap' }}>
             {[
-              { value: templateCount.toLocaleString('fr-FR') + '+', label: 'Mod�les de documents' },
+              { value: templateCount.toLocaleString('fr-FR') + '+', label: 'Modèles de documents' },
               { value: categoryCount + ' domaines', label: 'Secteurs couverts' },
               { value: '15+', label: 'Pays africains' },
-              { value: '< 30s', label: 'Temps de g�n�ration' },
+              { value: '< 30s', label: 'Temps de génération' },
             ].map(s => (
               <div key={s.label} style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '2.2rem', fontWeight: 900, color: 'var(--cobalt)', lineHeight: 1 }}>{s.value}</div>
@@ -168,7 +168,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? AVANTAGES �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */}
+      {/* ════════════════════ AVANTAGES ════════════════════ */}
       <section className="container mt-4">
         <h2 className="text-center" style={{ fontSize: '1.7rem' }}>Pourquoi choisir IBIG DocPro ?</h2>
         <p className="text-center text-muted mb-3" style={{ maxWidth: 560, margin: '8px auto 28px' }}>
@@ -188,7 +188,7 @@ export default async function HomePage() {
       {/* CATEGORIES DYNAMIQUES */}
       <section className="container mt-4">
         <h2 className="text-center" style={{ fontSize: '1.7rem' }}>Qu'est-ce que vous cherchez ?</h2>
-        <p className="text-center text-muted mb-3">Trouvez votre document en un clic parmi {templateCount.toLocaleString('fr-FR')} mod�les � {categoryCount} domaines.</p>
+        <p className="text-center text-muted mb-3">Trouvez votre document en un clic parmi {templateCount.toLocaleString('fr-FR')} modèles · {categoryCount} domaines.</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
           {categoryCounts.map(cat => {
             const meta = CATEGORIES_META[cat.category];
@@ -208,26 +208,26 @@ export default async function HomePage() {
                 <span style={{ fontSize: '1.4rem' }}>{meta.emoji}</span>
                 <div>
                   <div style={{ fontWeight: 600, color: 'var(--navy)', fontSize: '.88rem', lineHeight: 1.3 }}>{meta.label}</div>
-                  <div style={{ fontSize: '.75rem', color: '#888' }}>{cat._count.id.toLocaleString('fr-FR')} mod�les</div>
+                  <div style={{ fontSize: '.75rem', color: '#888' }}>{cat._count.id.toLocaleString('fr-FR')} modèles</div>
                 </div>
               </Link>
             );
           })}
         </div>
         <p className="text-center mt-3">
-          <Link href="/catalogue" className="btn btn-primary">Voir tous les {templateCount.toLocaleString('fr-FR')} mod�les ?</Link>
+          <Link href="/catalogue" className="btn btn-primary">Voir tous les {templateCount.toLocaleString('fr-FR')} modèles →</Link>
         </p>
       </section>
 
-      {/* �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? COMMENT ÇA MARCHE �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */}
+      {/* ════════════════════ COMMENT ÇA MARCHE ════════════════════ */}
       <section style={{ background: '#f5f7fa', padding: '48px 0', marginTop: 48 }}>
         <div className="container">
           <h2 className="text-center" style={{ fontSize: '1.7rem' }}>De zéro à votre document en 4 étapes</h2>
           <p className="text-center text-muted mb-3">Moins de 60 secondes. Vraiment.</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24, marginTop: 32 }}>
             {[
-              { num: '1', icon: '�?', titre: 'Choisissez', texte: 'Parcourez le catalogue et sélectionnez le document dont vous avez besoin.' },
-              { num: '2', icon: '�?�?', titre: 'Renseignez', texte: "L'IA vous pose quelques questions simples. Remplissez en moins d'une minute." },
+              { num: '1', icon: '🔍', titre: 'Choisissez', texte: 'Parcourez le catalogue et sélectionnez le document dont vous avez besoin.' },
+              { num: '2', icon: '✍️', titre: 'Renseignez', texte: "L'IA vous pose quelques questions simples. Remplissez en moins d'une minute." },
               { num: '3', icon: '⚡', titre: 'Générez', texte: "Votre document complet et personnalisé est prêt. Prévisualisez-le immédiatement." },
               { num: '4', icon: '📥', titre: 'Payez & Téléchargez', texte: 'Payez via Mobile Money. Téléchargez en PDF, Word ou PowerPoint.' },
             ].map(e => (
@@ -251,7 +251,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? TÉMOIGNAGES �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */}
+      {/* ════════════════════ TÉMOIGNAGES ════════════════════ */}
       <section className="container mt-4">
         <h2 className="text-center" style={{ fontSize: '1.7rem' }}>Ils nous font confiance</h2>
         <p className="text-center text-muted mb-3">Des milliers de professionnels africains génèrent leurs documents avec IBIG DocPro.</p>
@@ -283,7 +283,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? FONCTIONNALITÉS CLÉ �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */}
+      {/* ════════════════════ FONCTIONNALITÉS CLÉ ════════════════════ */}
       <section style={{ background: '#0D2B4E', color: '#fff', padding: '56px 0', marginTop: 48 }}>
         <div className="container">
           <h2 className="text-center" style={{ color: '#fff', fontSize: '1.7rem' }}>Pourquoi IBIG DocPro est différent</h2>
@@ -292,10 +292,10 @@ export default async function HomePage() {
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 24 }}>
             {[
-              { icon: '⚖�?', titre: 'Droit OHADA & lois locales', texte: 'Chaque clause est conforme à l\'Acte uniforme OHADA, au Code du travail et aux lois du pays sélectionné.' },
-              { icon: '�?�?', titre: 'Rédaction de niveau professionnel', texte: 'Clauses complètes, terminologie exacte, structure conforme — chaque document respecte les standards du droit OHADA et des lois locales.' },
+              { icon: '⚖️', titre: 'Droit OHADA & lois locales', texte: 'Chaque clause est conforme à l\'Acte uniforme OHADA, au Code du travail et aux lois du pays sélectionné.' },
+              { icon: '✍️', titre: 'Rédaction de niveau professionnel', texte: 'Clauses complètes, terminologie exacte, structure conforme — chaque document respecte les standards du droit OHADA et des lois locales.' },
               { icon: '🔒', titre: 'QR code d\'authenticité', texte: 'Chaque document payé porte un QR code vérifiable. Impossibilité de falsification — votre document est certifiable.' },
-              { icon: '�?', titre: '15 pays africains', texte: 'CI, SN, CM, BJ, TG, BF, ML, GN, GA, CG, NE, CD, MA, DZ, TN. Adaptations légales automatiques.' },
+              { icon: '🌍', titre: '15 pays africains', texte: 'CI, SN, CM, BJ, TG, BF, ML, GN, GA, CG, NE, CD, MA, DZ, TN. Adaptations légales automatiques.' },
               { icon: '📱', titre: 'Mobile Money', texte: 'Orange Money, MTN MoMo, Wave, Moov… Payez comme vous le faites déjà. Pas besoin de carte bancaire.' },
               { icon: '📄', titre: 'PDF · Word · PowerPoint · Excel', texte: 'Un seul paiement donne accès à tous les formats. Modifiable dans Word, partageable en PDF.' },
             ].map(f => (
@@ -311,7 +311,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? PAYS COUVERTS �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */}
+      {/* ════════════════════ PAYS COUVERTS ════════════════════ */}
       <section className="container mt-4">
         <h2 className="text-center" style={{ fontSize: '1.7rem' }}>Disponible dans toute l'Afrique francophone</h2>
         <p className="text-center text-muted mb-3">Documents adaptés aux lois de chaque pays. Sélectionnez votre pays lors de la génération.</p>
@@ -328,7 +328,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? TARIFICATION �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */}
+      {/* ════════════════════ TARIFICATION ════════════════════ */}
       <section style={{ background: '#f5f7fa', padding: '56px 0', marginTop: 48 }}>
         <div className="container">
           <h2 className="text-center" style={{ fontSize: '1.7rem' }}>Tarification simple et transparente</h2>
@@ -342,7 +342,7 @@ export default async function HomePage() {
               { niveau: 'standard', emoji: '📄', label: 'Standard', color: '#1565C0',
                 desc: 'Complet · conforme · PDF', depuis: DEFAULT_PRICE_GRID.A.standard,
                 features: ['Document complet OHADA', 'Format PDF', 'QR d\'authenticité'] },
-              { niveau: 'pro', emoji: '�?', label: 'Pro', color: '#F57F17',
+              { niveau: 'pro', emoji: '⭐', label: 'Pro', color: '#F57F17',
                 desc: 'Personnalisé · PDF + Word', depuis: DEFAULT_PRICE_GRID.A.pro,
                 features: ['Tout Standard +', 'Personnalisé secteur', 'PDF + Word (DOCX)', '2 régénérations'] },
               { niveau: 'expert', emoji: '💎', label: 'Expert', color: '#7c3aed',
@@ -405,7 +405,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? CTA FINAL �?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�? */}
+      {/* ════════════════════ CTA FINAL ════════════════════ */}
       <section style={{
         background: 'linear-gradient(135deg,#1565C0,#0D47A1)',
         padding: '64px 0', textAlign: 'center', color: '#fff',

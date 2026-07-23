@@ -1,4 +1,4 @@
-?// Dictionnaires FR/EN des pages publiques (CDC §1 — interface bilingue).
+﻿// Dictionnaires FR/EN des pages publiques (CDC §1 — interface bilingue).
 // Données pures, sans dépendance serveur — les NOMS de templates/forfaits (contenu BDD)
 // ne sont PAS traduits ici : seuls les libellés d'interface le sont.
 
@@ -57,19 +57,19 @@ const fr = {
           "Décrivez votre besoin en langage naturel : ChatDoc choisit le modèle optimal, l'adapte à votre pays et produit un document personnalisé.",
       },
       {
-        icone: '⚖�?',
+        icone: '⚖️',
         titre: 'Adaptation légale par pays',
         texte:
           'Base légale mondiale : chaque document est conforme aux lois du pays sélectionné (OHADA pour l’Afrique, loi Alur pour la France…).',
       },
       {
-        icone: '�?',
+        icone: '🌍',
         titre: 'Traduction simultanée',
         texte:
           'Générez le même document en plusieurs langues en une seule opération : CV en français + anglais + espagnol simultanément.',
       },
       {
-        icone: '�?',
+        icone: '⭐',
         titre: 'Score de qualité',
         texte:
           "Chaque document est noté automatiquement (lisibilité, conformité légale, attractivité pour les recruteurs) avec des suggestions d'amélioration.",
@@ -101,7 +101,7 @@ const fr = {
     packsBtn: 'Voir les packs →',
     rechercherPlaceholder: 'Rechercher un document : CV, contrat, facture, bail…',
     rechercherAria: 'Rechercher un document',
-    rechercherBtn: '�? Rechercher',
+    rechercherBtn: '🔍 Rechercher',
     effacer: 'Effacer',
     resultatsPour: (n: number, q: string) => `${n} résultat${n > 1 ? 's' : ''} pour « ${q} »`,
     dansCategorie: (c: string) => ` dans « ${c} »`,
@@ -119,15 +119,15 @@ const fr = {
       juridique_admin: 'Juridique & Administratif',
       commercial: 'Commercial & Marketing',
       communication: 'Communication',
-      comptabilite_audit: 'Comptabilit� & Audit',
+      comptabilite_audit: 'Comptabilité & Audit',
       finance_banque: 'Finance & Banque',
       informatique_tech: 'Informatique & Tech',
       gestion_management: 'Gestion & Management',
       gestion_projet: 'Gestion de Projet',
       qhse: 'QHSE',
       entrepreneuriat: 'Entrepreneuriat',
-      academique: 'Acad�mique',
-      sante: 'Sant�',
+      academique: 'Académique',
+      sante: 'Santé',
       immobilier: 'Immobilier',
       association: 'Association',
       btp_construction: 'BTP & Construction',
@@ -237,19 +237,19 @@ const en: Dict = {
           'Describe your need in natural language: the AI picks the best template, adapts it to your country and generates a personalized document.',
       },
       {
-        icone: '⚖�?',
+        icone: '⚖️',
         titre: 'Country-specific legal adaptation',
         texte:
           'Global legal base: every document complies with the laws of the selected country (OHADA for Africa, Alur law for France…).',
       },
       {
-        icone: '�?',
+        icone: '🌍',
         titre: 'Simultaneous translation',
         texte:
           'Generate the same document in several languages in a single operation: a resume in French + English + Spanish at once.',
       },
       {
-        icone: '�?',
+        icone: '⭐',
         titre: 'AI quality score',
         texte:
           'The AI rates your document (readability, legal compliance, appeal to recruiters) and suggests improvements.',
@@ -281,7 +281,7 @@ const en: Dict = {
     packsBtn: 'View packs →',
     rechercherPlaceholder: 'Search for a document: resume, contract, invoice, lease…',
     rechercherAria: 'Search for a document',
-    rechercherBtn: '�? Search',
+    rechercherBtn: '🔍 Search',
     effacer: 'Clear',
     resultatsPour: (n: number, q: string) => `${n} result${n > 1 ? 's' : ''} for "${q}"`,
     dansCategorie: (c: string) => ` in "${c}"`,

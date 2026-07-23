@@ -1,4 +1,4 @@
-?// Catalogue public des modèles de documents (DocumentTemplate actifs)
+﻿// Catalogue public des modèles de documents (DocumentTemplate actifs)
 // + recherche plein texte (?q=) sur nom, description et catégorie.
 import Link from 'next/link';
 import { prisma } from '@/lib/db';

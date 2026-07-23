@@ -1,18 +1,18 @@
-?// Les catégories officielles de documents (mêmes codes que DocumentTemplate.category).
+﻿// Les catégories officielles de documents (mêmes codes que DocumentTemplate.category).
 export const MARKETPLACE_CATEGORIES: Record<string, string> = {
   rh_emploi: 'RH & Emploi',
   juridique_admin: 'Juridique & Administratif',
   commercial: 'Commercial & Marketing',
   communication: 'Communication',
-  comptabilite_audit: 'Comptabilit� & Audit',
+  comptabilite_audit: 'Comptabilité & Audit',
   finance_banque: 'Finance & Banque',
   informatique_tech: 'Informatique & Tech',
   gestion_management: 'Gestion & Management',
   gestion_projet: 'Gestion de Projet',
   qhse: 'QHSE',
   entrepreneuriat: 'Entrepreneuriat',
-  academique: 'Acad�mique',
-  sante: 'Sant�',
+  academique: 'Académique',
+  sante: 'Santé',
   immobilier: 'Immobilier',
   association: 'Association',
   btp_construction: 'BTP & Construction',
