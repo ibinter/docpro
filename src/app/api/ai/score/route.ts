@@ -72,8 +72,8 @@ export async function POST(req: NextRequest) {
     .filter(Boolean)
     .join('\n');
 
-  // Utiliser contentJson (texte brut, compact) pour que l'analyseur voie le document complet.
-  // Le HTML strippé tronqué à 6000 chars ne couvrait que 5-6 articles sur 17.
+  // Utiliser contentJson (texte brut, compact) — toujours le document COMPLET.
+  // Fallback : HTML strippé sans limite (le modèle gère des inputs larges).
   let contenu: string;
   if (doc.contentJson) {
     try {
@@ -81,16 +81,17 @@ export async function POST(req: NextRequest) {
       const sections = parsed.sections ?? [];
       contenu = sections.map((s) => `## ${s.titre ?? ''}\n${s.contenu ?? ''}`).join('\n\n');
     } catch {
-      contenu = stripHtml(doc.contentHtml).slice(0, 12000);
+      contenu = stripHtml(doc.contentHtml);
     }
   } else {
-    contenu = stripHtml(doc.contentHtml).slice(0, 12000);
+    // Pas de contentJson → utiliser le HTML complet strippé (pas de troncature)
+    contenu = stripHtml(doc.contentHtml);
   }
 
   const userMsg = JSON.stringify({
     type_de_document: doc.template.name,
     pays: countryName(doc.country),
-    contenu: contenu.slice(0, 16000),
+    contenu: contenu.slice(0, 40000),
   });
 
   const raw = await askClaude(system, userMsg, 1200);
