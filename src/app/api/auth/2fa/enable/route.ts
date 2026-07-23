@@ -50,9 +50,10 @@ export async function POST(req: Request) {
   });
   await notifyUser({
     userId: user.id,
-    event: '2fa_activee',
-    title: 'Double authentification activée',
-    body: 'La vérification en deux étapes (TOTP) est désormais active sur votre compte. Un code de votre application d’authentification sera demandé à chaque connexion.',
+    event: ‘2fa_activee’,
+    title: ‘Double authentification activée’,
+    body: ‘La vérification en deux étapes (TOTP) est désormais active sur votre compte. Un code de votre application d\’authentification sera demandé à chaque connexion.’,
+    vars: { date: new Date().toLocaleString(‘fr-FR’, { timeZone: ‘Africa/Abidjan’ }) },
   });
 
   return back(req, '?ok=activee');

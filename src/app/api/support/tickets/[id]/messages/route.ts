@@ -65,6 +65,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           event: 'ticket_reponse',
           title: `Réponse de l'assistance — « ${ticket.subject} »`,
           body: body.length > 180 ? `${body.slice(0, 180)}…` : body,
+          vars: { ref: ticket.id.slice(-8).toUpperCase(), sujet: ticket.subject },
         });
       } else {
         await notifyAdmins({

@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireUser, AuthError } from '@/lib/auth';
 import { audit } from '@/lib/audit';
-import { notifyAdmins } from '@/lib/notify';
+import { notifyAdmins, notifyUser } from '@/lib/notify';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -44,6 +44,14 @@ export async function POST(req: Request) {
     });
 
     try {
+      // Confirmation au client
+      await notifyUser({
+        userId: user.id,
+        event: 'ticket_ouvert',
+        title: `Ticket #${ticket.id.slice(-8).toUpperCase()} enregistré`,
+        body: `Votre demande « ${subject} » a été reçue. Nous vous répondons bientôt.`,
+        vars: { ref: ticket.id.slice(-8).toUpperCase(), sujet: subject },
+      });
       await notifyAdmins({
         event: 'ticket_cree',
         title: `Nouveau ticket d'assistance (${category})`,

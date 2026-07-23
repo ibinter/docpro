@@ -49,9 +49,10 @@ export async function POST(req: Request) {
   });
   await notifyUser({
     userId: user.id,
-    event: '2fa_desactivee',
-    title: 'Double authentification désactivée',
-    body: 'La vérification en deux étapes (TOTP) a été désactivée sur votre compte. Si vous n’êtes pas à l’origine de cette action, changez immédiatement votre mot de passe.',
+    event: ‘2fa_desactivee’,
+    title: ‘Double authentification désactivée’,
+    body: ‘La vérification en deux étapes (TOTP) a été désactivée sur votre compte. Si vous n\’êtes pas à l\’origine de cette action, changez immédiatement votre mot de passe.’,
+    vars: { date: new Date().toLocaleString(‘fr-FR’, { timeZone: ‘Africa/Abidjan’ }) },
   });
 
   return back(req, '?ok=desactivee');
