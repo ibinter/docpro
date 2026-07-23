@@ -6,8 +6,8 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { createSession } from '@/lib/auth';
-import {
 import { makeUrl } from '@/lib/redirect';
+import {
   decodePending2fa,
   encodePending2fa,
   PENDING_2FA_COOKIE,
