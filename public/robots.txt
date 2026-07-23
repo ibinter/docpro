@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Pages privées — espace client, admin, API
+Disallow: /compte/
+Disallow: /admin/
+Disallow: /api/
+Disallow: /checkout/
+Disallow: /paiement-manuel/
+Disallow: /rejoindre/
+Disallow: /verify/
+Disallow: /essai/
+
+# Ressources Next.js internes
+Disallow: /_next/
+
+Sitemap: https://docpro.ibigsoft.com/sitemap.xml

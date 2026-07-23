@@ -1,4 +1,4 @@
-// POST /api/auth/2fa/enable {code} — active la 2FA après vérification d'un premier code TOTP.
+﻿// POST /api/auth/2fa/enable {code} — active la 2FA après vérification d'un premier code TOTP.
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { AuthError, requireUser } from '@/lib/auth';
@@ -50,10 +50,10 @@ export async function POST(req: Request) {
   });
   await notifyUser({
     userId: user.id,
-    event: ‘2fa_activee’,
-    title: ‘Double authentification activée’,
-    body: ‘La vérification en deux étapes (TOTP) est désormais active sur votre compte. Un code de votre application d\’authentification sera demandé à chaque connexion.’,
-    vars: { date: new Date().toLocaleString(‘fr-FR’, { timeZone: ‘Africa/Abidjan’ }) },
+    event: '2fa_activee',
+    title: 'Double authentification activée',
+    body: 'La vérification en deux étapes (TOTP) est désormais active sur votre compte.',
+    vars: { date: new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Abidjan' }) },
   });
 
   return back(req, '?ok=activee');

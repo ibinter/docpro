@@ -1,4 +1,4 @@
-// POST /api/auth/2fa/disable {code} — désactive la 2FA (un code TOTP valide est requis).
+﻿// POST /api/auth/2fa/disable {code} — désactive la 2FA (un code TOTP valide est requis).
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { AuthError, requireUser } from '@/lib/auth';
@@ -49,10 +49,10 @@ export async function POST(req: Request) {
   });
   await notifyUser({
     userId: user.id,
-    event: ‘2fa_desactivee’,
-    title: ‘Double authentification désactivée’,
-    body: ‘La vérification en deux étapes (TOTP) a été désactivée sur votre compte. Si vous n\’êtes pas à l\’origine de cette action, changez immédiatement votre mot de passe.’,
-    vars: { date: new Date().toLocaleString(‘fr-FR’, { timeZone: ‘Africa/Abidjan’ }) },
+    event: '2fa_desactivee',
+    title: 'Double authentification désactivée',
+    body: 'La vérification en deux étapes (TOTP) a été désactivée sur votre compte. Si vous n\'êtes pas à l\'origine de cette action, changez immédiatement votre mot de passe.',
+    vars: { date: new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Abidjan' }) },
   });
 
   return back(req, '?ok=desactivee');

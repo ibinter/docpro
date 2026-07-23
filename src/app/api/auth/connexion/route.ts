@@ -1,4 +1,4 @@
-// POST /api/auth/connexion — vérification des identifiants + ouverture de session.
+﻿// POST /api/auth/connexion — vérification des identifiants + ouverture de session.
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db';
