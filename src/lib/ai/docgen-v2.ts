@@ -170,6 +170,39 @@ export interface DocGenResult {
   durationMs: number;
 }
 
+/**
+ * Tente de parser le JSON. Si tronqué (token limit atteinte), récupère les sections
+ * complètes déjà produites plutôt que de tout rejeter.
+ */
+function parseOrRepair(raw: string): DocJson {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    // Extraction des sections complètes par regex même si le JSON est coupé
+    const titre = raw.match(/"titre"\s*:\s*"([^"]+)"/)?.[1] ?? 'Document';
+    const pays = raw.match(/"pays"\s*:\s*"([^"]+)"/)?.[1] ?? "Côte d'Ivoire";
+    const date = raw.match(/"date_creation"\s*:\s*"([^"]+)"/)?.[1] ?? new Date().toLocaleDateString('fr-FR');
+
+    // Extraire les paires clé/valeur des parties
+    const partiesBlock = raw.match(/"parties"\s*:\s*\{([^}]+)\}/)?.[1] ?? '';
+    const parties: Record<string, string> = {};
+    const partyMatches = partiesBlock.matchAll(/"([^"]+)"\s*:\s*"([^"]+)"/g);
+    for (const m of partyMatches) parties[m[1]] = m[2];
+
+    // Extraire les sections complètes (titre + contenu terminé par un guillemet fermant)
+    const sections: DocSection[] = [];
+    const sectionRe = /\{\s*"titre"\s*:\s*"([^"]+)"\s*,\s*"contenu"\s*:\s*"((?:[^"\\]|\\.)*)"\s*\}/g;
+    let m;
+    while ((m = sectionRe.exec(raw)) !== null) {
+      sections.push({ titre: m[1], contenu: m[2].replace(/\\n/g, '\n') });
+    }
+
+    if (sections.length === 0) throw new Error('Aucune section récupérable');
+
+    return { schema: 'document.v1', titre, parties: Object.keys(parties).length ? parties : undefined, sections, date_creation: date, pays };
+  }
+}
+
 export async function generateDocumentJson(input: DocGenInput): Promise<DocGenResult | null> {
   const model = MODEL_BY_NIVEAU[input.niveau];
   const maxTokens = MAX_TOKENS[input.classe][input.niveau];
@@ -190,8 +223,8 @@ export async function generateDocumentJson(input: DocGenInput): Promise<DocGenRe
     const raw = res.content[0]?.type === 'text' ? res.content[0].text.trim() : '';
     const clean = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
 
-    const doc: DocJson = JSON.parse(clean);
-    if (!doc.sections || !Array.isArray(doc.sections)) throw new Error('JSON invalide: sections manquantes');
+    const doc: DocJson = parseOrRepair(clean);
+    if (!doc.sections || !Array.isArray(doc.sections) || doc.sections.length === 0) throw new Error('JSON invalide: sections manquantes');
 
     const usage = res.usage as { input_tokens: number; output_tokens: number; cache_read_input_tokens?: number };
     return {

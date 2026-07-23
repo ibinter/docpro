@@ -43,10 +43,11 @@ export const RECHARGE_TIERS = [
 ];
 
 // Max tokens selon classe + niveau (CDC §7)
+// Haiku max = 8192 ; Sonnet 5 / Opus 4.8 = 64 000
 export const MAX_TOKENS: Record<Classe, Record<Niveau, number>> = {
-  A: { standard: 4000,  pro: 6000,  expert: 8000  },
-  B: { standard: 8000,  pro: 12000, expert: 16000 },
-  C: { standard: 16000, pro: 24000, expert: 32000 },
+  A: { standard: 7000,  pro: 20000, expert: 32000 },
+  B: { standard: 7000,  pro: 24000, expert: 40000 },
+  C: { standard: 7000,  pro: 32000, expert: 64000 },
 };
 
 // Modèle IA selon niveau (CDC §7)
