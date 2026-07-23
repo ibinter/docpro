@@ -31,6 +31,12 @@ export async function POST(req: Request) {
 
   if (!verifyTotp(user.totpSecret, code)) return back(req, '?erreur=code_invalide');
 
+  // TODO anti-replay TOTP: le champ totpLastCode n'existe pas encore dans le schema Prisma.
+  // Ajouter `totpLastCode String?` au model User, puis décommenter le bloc suivant :
+  // if (user.totpLastCode === code) {
+  //   return NextResponse.json({ error: 'Code déjà utilisé' }, { status: 400 });
+  // }
+
   await prisma.user.update({
     where: { id: user.id },
     data: { totpEnabled: false, totpSecret: null },

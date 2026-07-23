@@ -72,8 +72,21 @@ export default function QuestionnaireForm({
   const submit = async () => {
     if (submittingRef.current) return;
     submittingRef.current = true;
-    const err = validateStep(fields);
-    if (err) { submittingRef.current = false; return setError(err); }
+    // Valider tous les champs et retrouver l'étape du premier champ en erreur.
+    let firstErrMsg: string | null = null;
+    let firstErrStep = -1;
+    for (let si = 0; si < steps.length; si++) {
+      const err = validateStep(steps[si]);
+      if (err && firstErrMsg === null) {
+        firstErrMsg = err;
+        firstErrStep = si;
+      }
+    }
+    if (firstErrMsg !== null) {
+      submittingRef.current = false;
+      if (firstErrStep !== -1 && firstErrStep !== step) setStep(firstErrStep);
+      return setError(firstErrMsg);
+    }
     setError(null);
     setLoading(true);
     try {

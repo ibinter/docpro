@@ -84,8 +84,12 @@ export default function PanierPage() {
     }
   };
 
-  const total = cart?.items.reduce((s, i) => s + i.template.price, 0) ?? 0;
-  const currency = cart?.items[0]?.template.currency ?? 'XOF';
+  const totals: Record<string, number> = cart?.items.reduce(function(acc: Record<string, number>, item) {
+    const cur = item.template.currency || 'XOF';
+    acc[cur] = (acc[cur] || 0) + item.template.price;
+    return acc;
+  }, {}) ?? {};
+  const totalEntries = Object.entries(totals);
 
   return (
     <main className="container mt-3" style={{ minHeight: '60vh', maxWidth: 800 }}>
@@ -153,12 +157,18 @@ export default function PanierPage() {
           <div className="card mb-3" style={{ padding: '20px 24px' }}>
             <div className="flex-between mb-2">
               <span className="text-muted">{cart.items.length} document{cart.items.length > 1 ? 's' : ''}</span>
-              <span style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--navy)' }}>
-                Total : {formatMoney(total, currency)}
-              </span>
+              <div style={{ textAlign: 'right' }}>
+                {totalEntries.map(([cur, amt]) => (
+                  <div key={cur} style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--navy)' }}>
+                    Total {cur} : {formatMoney(amt, cur)}
+                  </div>
+                ))}
+              </div>
             </div>
             <p className="text-small text-muted mb-3">
-              Paiement unique pour tous les documents. Chaque document sera généré individuellement après paiement confirmé.
+              {totalEntries.length > 1
+                ? 'Attention : votre panier contient des articles en plusieurs devises. Ils seront facturés séparément.'
+                : 'Paiement unique pour tous les documents. Chaque document sera généré individuellement après paiement confirmé.'}
             </p>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <button
@@ -167,7 +177,7 @@ export default function PanierPage() {
                 className="btn btn-primary"
                 style={{ flex: '1 1 200px' }}
               >
-                {checkingOut ? 'Création de la commande…' : `Payer ${formatMoney(total, currency)} →`}
+                {checkingOut ? 'Création de la commande…' : `Passer commande (${totalEntries.map(([c, a]) => formatMoney(a, c)).join(' + ')}) →`}
               </button>
               <Link href="/catalogue" className="btn btn-outline" style={{ flex: '0 0 auto' }}>
                 Ajouter d'autres documents

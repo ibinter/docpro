@@ -31,6 +31,12 @@ export function parseExcelConfig(body: string): ExcelConfig | null {
   }
 }
 
+/** Neutralise les formules Excel injectées par l'utilisateur (injection protection). */
+function safeCell(v: string | number): string | number {
+  if (typeof v === 'string' && v.startsWith('=')) return "'" + v;
+  return v;
+}
+
 /** Injecte les réponses utilisateur dans une valeur de cellule. */
 function injectAnswers(value: string | number, answers: Answers): string | number {
   if (typeof value !== 'string') return value;
@@ -112,7 +118,7 @@ export async function generateExcel(
           cell.value = { formula: raw.replace(/\{r\}/g, String(actualRow)) };
           cell.numFmt = raw.includes('%') ? '0.00%' : '#,##0';
         } else {
-          cell.value = injectAnswers(raw, answers);
+          cell.value = safeCell(injectAnswers(raw, answers));
           if (typeof raw === 'number' || (!isNaN(Number(raw)) && raw !== '')) {
             cell.numFmt = '#,##0';
           }

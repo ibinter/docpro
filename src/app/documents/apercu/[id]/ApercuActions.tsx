@@ -20,8 +20,36 @@ export default function ApercuActions({
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [downloading, setDownloading] = useState<string | null>(null);
+
+  const download = async (format: string) => {
+    setError(null);
+    setDownloading(format);
+    try {
+      const res = await fetch(`/api/documents/${documentId}/download?format=${format}`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Echec du telechargement (${res.status}).`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const ext = format;
+      a.download = `document-${documentId}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erreur inattendue lors du telechargement.');
+    } finally {
+      setDownloading(null);
+    }
+  };
 
   const pay = async () => {
     setError(null);
@@ -50,7 +78,9 @@ export default function ApercuActions({
       const res = await fetch(`/api/documents/${documentId}/regenerate`, { method: 'POST' });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'La régénération a échoué.');
+      setSuccess('Actualisation en cours…');
       router.refresh();
+      setTimeout(() => setSuccess(null), 3000);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur inattendue.');
     } finally {
@@ -61,6 +91,7 @@ export default function ApercuActions({
   return (
     <div className="card">
       {error && <div className="alert alert-danger">{error}</div>}
+      {success && <div className="alert alert-success">{success}</div>}
       <div className="flex" style={{ flexWrap: 'wrap', justifyContent: 'center' }}>
         {!paid && (
           <>
@@ -79,9 +110,9 @@ export default function ApercuActions({
           <div style={{ width: '100%' }}>
             <p className="text-muted text-small text-center mb-2">Votre mini-app Excel est prête :</p>
             <div className="flex" style={{ justifyContent: 'center', flexWrap: 'wrap', gap: 10 }}>
-              <a href={`/api/documents/${documentId}/download?format=xlsx`} className="btn btn-primary btn-lg">
-                📊 Télécharger Excel (.xlsx)
-              </a>
+              <button type="button" className="btn btn-primary btn-lg" onClick={() => download('xlsx')} disabled={downloading === 'xlsx'}>
+                {downloading === 'xlsx' ? 'Téléchargement…' : '📊 Télécharger Excel (.xlsx)'}
+              </button>
             </div>
           </div>
         )}
@@ -89,15 +120,15 @@ export default function ApercuActions({
           <div style={{ width: '100%' }}>
             <p className="text-muted text-small text-center mb-2">Choisissez votre format de téléchargement :</p>
             <div className="flex" style={{ justifyContent: 'center', flexWrap: 'wrap', gap: 10 }}>
-              <a href={`/api/documents/${documentId}/download?format=pdf`} className="btn btn-primary btn-lg">
-                📄 PDF (impression)
-              </a>
-              <a href={`/api/documents/${documentId}/download?format=docx`} className="btn btn-outline btn-lg">
-                📝 Word DOCX (modifiable)
-              </a>
-              <a href={`/api/documents/${documentId}/download?format=pptx`} className="btn btn-outline btn-lg">
-                📊 PowerPoint PPTX
-              </a>
+              <button type="button" className="btn btn-primary btn-lg" onClick={() => download('pdf')} disabled={!!downloading}>
+                {downloading === 'pdf' ? 'Téléchargement…' : '📄 PDF (impression)'}
+              </button>
+              <button type="button" className="btn btn-outline btn-lg" onClick={() => download('docx')} disabled={!!downloading}>
+                {downloading === 'docx' ? 'Téléchargement…' : '📝 Word DOCX (modifiable)'}
+              </button>
+              <button type="button" className="btn btn-outline btn-lg" onClick={() => download('pptx')} disabled={!!downloading}>
+                {downloading === 'pptx' ? 'Téléchargement…' : '📊 PowerPoint PPTX'}
+              </button>
             </div>
           </div>
         )}

@@ -4,9 +4,22 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getSessionUser } from '@/lib/auth';
 import { getDict } from '@/lib/i18n';
+import prisma from '@/lib/prisma';
 
 export default async function SiteHeader() {
   const [user, { lang, t }] = await Promise.all([getSessionUser(), getDict()]);
+  let cartCount = 0;
+  if (user) {
+    try {
+      const cart = await prisma.cart.findFirst({
+        where: { userId: user.id },
+        include: { _count: { select: { items: true } } },
+      });
+      cartCount = cart?._count?.items ?? 0;
+    } catch {
+      /* ignore — badge non critique */
+    }
+  }
   return (
     <header className="site-header">
       <div className="container flex-between">
@@ -22,7 +35,27 @@ export default async function SiteHeader() {
               {(user.role === 'admin' || user.role === 'superadmin') && (
                 <Link href="/admin">{t.nav.adminConsole}</Link>
               )}
-              <Link href="/panier" title="Mon panier" style={{ fontWeight: 600 }}>🛒 Panier</Link>
+              <Link href="/panier" title="Mon panier" style={{ fontWeight: 600, position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                🛒 Panier
+                {cartCount > 0 && (
+                  <span style={{
+                    background: 'var(--danger, #e53e3e)',
+                    color: '#fff',
+                    borderRadius: '9999px',
+                    fontSize: '0.65rem',
+                    fontWeight: 700,
+                    lineHeight: 1,
+                    minWidth: 18,
+                    height: 18,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '0 5px',
+                  }}>
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
               <Link href="/compte">{t.nav.monEspace}</Link>
             </>
           ) : (

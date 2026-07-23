@@ -38,7 +38,8 @@ async function createOrderWithNumber(data: {
 }): Promise<Order> {
   let lastError: unknown = null;
   for (let attempt = 0; attempt < 5; attempt++) {
-    const count = await prisma.order.count();
+    const year = new Date().getFullYear();
+    const count = await prisma.order.count({ where: { createdAt: { gte: new Date(year, 0, 1) } } });
     const number = refNumber('CMD', count + 1 + attempt);
     try {
       return await prisma.order.create({

@@ -57,7 +57,7 @@ export async function getSessionUser() {
   if (!token) return null;
   const payload = decodeSession(token);
   if (!payload) return null;
-  return prisma.user.findUnique({ where: { id: payload.uid } });
+  return prisma.user.findUnique({ where: { id: payload.uid, emailVerified: true } });
 }
 
 /** Lève si non connecté. */

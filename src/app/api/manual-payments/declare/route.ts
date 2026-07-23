@@ -93,6 +93,10 @@ export async function POST(req: NextRequest) {
     const externalRef = field(form, 'reference').slice(0, 190) || null;
     const declaredCurrency = field(form, 'declaredCurrency') || channel.currency || order.currency;
 
+    // ── Vérification anti-doublon : une déclaration en cours suffit
+    const txExisting = await prisma.transaction.findFirst({ where: { orderId: order.id, status: { in: ['a_verifier', 'en_traitement'] } } });
+    if (txExisting) return NextResponse.json({ error: 'Une déclaration est déjà en cours pour cette commande.' }, { status: 409 });
+
     // ── Création atomique : Transaction + PaymentProof + statut commande
     const transaction = await prisma.$transaction(async (tx) => {
       const t = await tx.transaction.create({

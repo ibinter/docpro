@@ -13,6 +13,15 @@ import { DEFAULT_PRICE_GRID, getPrice, type Classe, type Niveau } from '@/lib/pr
 const VALID_NIVEAUX: Niveau[] = ['standard', 'pro', 'expert'];
 const VALID_CLASSES: Classe[] = ['A', 'B', 'C'];
 
+const genRateLimit = new Map()
+function checkRateLimit(key: string, max: number): boolean {
+  const now = Date.now()
+  const entry = genRateLimit.get(key)
+  if (!entry || entry.reset < now) { genRateLimit.set(key, {count: 1, reset: now + 3600000}); return true }
+  if (entry.count >= max) return false
+  entry.count++; return true
+}
+
 export async function POST(req: NextRequest) {
   let body: {
     code?: string;
@@ -62,6 +71,11 @@ export async function POST(req: NextRequest) {
   }
 
   const user = await getSessionUser();
+
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown'
+  const rlKey = user ? 'u:' + user.id : 'ip:' + ip
+  if (!checkRateLimit(rlKey, user ? 20 : 5)) return NextResponse.json({ error: 'Trop de generations. Reessayez dans une heure.' }, { status: 429 })
+
   if ((niveau === 'pro' || niveau === 'expert') && !user) {
     return NextResponse.json({ error: 'Connexion requise pour les niveaux pro et expert.' }, { status: 401 })
   }

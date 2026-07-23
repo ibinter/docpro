@@ -66,8 +66,7 @@ export default function CheckoutClient({
 
   const processorChannels = visible.filter((c) => c.type === 'processeur');
   const manualChannels = visible.filter((c) => c.type !== 'processeur');
-  // Le paiement en ligne simulé reste disponible même sans canal "processeur" configuré
-  const onlineAvailable = processorChannels.length > 0 || channels.every((c) => c.type !== 'processeur');
+  const onlineAvailable = channels.some(function(c) { return c.type === 'processeur'; });
 
   async function payOnline() {
     setBusy('online');

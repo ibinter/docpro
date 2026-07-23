@@ -81,6 +81,16 @@ export default async function CheckoutPage({
     isCertification = JSON.parse(order.metadataJson ?? '{}').certification === true;
   } catch { /* metadata illisible */ }
 
+  const STATUS_LABELS: Record<string, string> = {
+    en_attente_paiement: 'En attente de paiement',
+    paiement_en_cours: 'Paiement en cours',
+    payee: 'Payée',
+    rejetee: 'Rejetée',
+    annulee: 'Annulée',
+    expiree: 'Expirée',
+    preuve_soumise: 'Preuve soumise',
+  };
+
   const itemLabel = order.plan
     ? `Forfait ${order.plan.name}`
     : document && isCertification
@@ -112,7 +122,7 @@ export default async function CheckoutPage({
                     : ''}
               </div>
             </div>
-            <span className="badge badge-info">{order.status.replace(/_/g, ' ')}</span>
+            <span className="badge badge-info">{STATUS_LABELS[order.status] ?? order.status.replace(/_/g, ' ')}</span>
           </div>
           <table className="mt-2" style={{ width: '100%' }}>
             <tbody>
@@ -156,7 +166,7 @@ export default async function CheckoutPage({
           </div>
         ) : !payable ? (
           <div className="alert alert-warning">
-            Cette commande n&apos;est plus payable en ligne (statut : {order.status.replace(/_/g, ' ')}).{' '}
+            Cette commande n&apos;est plus payable en ligne (statut : {STATUS_LABELS[order.status] ?? order.status.replace(/_/g, ' ')}).{' '}
             <Link href="/compte">Retour à mon espace</Link>
           </div>
         ) : (
