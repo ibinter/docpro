@@ -44,9 +44,9 @@ export const RECHARGE_TIERS = [
 
 // Max tokens selon classe + niveau (CDC §7)
 export const MAX_TOKENS: Record<Classe, Record<Niveau, number>> = {
-  A: { standard: 2000, pro: 2500,  expert: 3000  },
-  B: { standard: 6000, pro: 8000,  expert: 10000 },
-  C: { standard: 12000, pro: 20000, expert: 32000 },
+  A: { standard: 4000,  pro: 6000,  expert: 8000  },
+  B: { standard: 8000,  pro: 12000, expert: 16000 },
+  C: { standard: 16000, pro: 24000, expert: 32000 },
 };
 
 // Modèle IA selon niveau (CDC §7)

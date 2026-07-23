@@ -29,16 +29,19 @@ export interface DocJson {
   pays: string;
 }
 
-const SYSTEM_PROMPT_JSON = `Tu es un expert juridique africain OHADA/UEMOA/CEMAC.
-Tu génères des documents professionnels en JSON STRICT et UNIQUEMENT du JSON.
+const SYSTEM_PROMPT_JSON = `Tu es un expert juridique africain OHADA/UEMOA/CEMAC spécialisé dans la rédaction de documents professionnels longs et complets.
+Tu génères des documents en JSON STRICT et UNIQUEMENT du JSON.
 
 RÈGLES ABSOLUES:
 - Réponds avec du JSON valide UNIQUEMENT. Aucun texte avant ou après.
 - Respecte exactement le schéma fourni.
-- Chaque section doit avoir un contenu complet (minimum 80 mots par section).
-- N'utilise JAMAIS de lignes à remplir (___). Rédige le contenu complet.
-- Utilise les montants en FCFA et les références légales africaines.
-- Complète intelligemment les données manquantes avec des valeurs professionnelles.`;
+- La longueur du document doit être ADAPTÉE AU TYPE DE DOCUMENT : un contrat de bail peut faire 8-15 pages, un contrat de travail 5-10 pages, une lettre officielle 1-2 pages, un statut de société 15-25 pages. PAS DE LIMITE SUPÉRIEURE.
+- Chaque section doit être rédigée avec un contenu COMPLET, DÉTAILLÉ et PROFESSIONNEL (200-500 mots par section pour les documents juridiques).
+- N'utilise JAMAIS de lignes à remplir (___) ou de placeholders vides. Rédige le contenu intégral.
+- Utilise les montants en FCFA et les références légales africaines (OHADA, UEMOA, droit local).
+- Inclus les articles, alinéas, sous-sections et clauses détaillées appropriés au type de document.
+- Complète intelligemment les données manquantes avec des valeurs professionnelles réalistes.
+- Pour les contrats et actes juridiques : inclus les préambules, les définitions, toutes les clauses obligatoires et les dispositions finales.`;
 
 function buildPrompt(input: DocGenInput): string {
   const { templateName, fields, answers, country, niveau } = input;
@@ -51,61 +54,109 @@ function buildPrompt(input: DocGenInput): string {
     .filter(Boolean).join('\n');
 
   const niveauDesc = {
-    standard: 'générique, complet, conforme au droit',
-    pro: 'personnalisé secteur + poste, références jurisprudentielles',
-    expert: 'personnalisé secteur + marché local + chiffres + jurisprudence récente',
+    standard: 'complet, conforme au droit, bien structuré',
+    pro: 'personnalisé secteur + références jurisprudentielles, très détaillé',
+    expert: 'exhaustif, personnalisé marché local + chiffres + jurisprudence récente, qualité notariale',
   }[niveau];
 
-  return `Génère un "${templateName}" (niveau: ${niveau} — ${niveauDesc}).
+  const sectionsMin = {
+    standard: 8,
+    pro: 12,
+    expert: 18,
+  }[niveau];
+
+  return `Génère un document complet "${templateName}" (niveau: ${niveau} — ${niveauDesc}).
 Pays: ${country ?? "Côte d'Ivoire (OHADA)"}.
 
 Données client:
 ${provided || '(utilise des valeurs professionnelles standards)'}
 
+INSTRUCTIONS DE LONGUEUR:
+- Génère AUTANT DE SECTIONS QUE NÉCESSAIRE pour un document professionnel complet (minimum ${sectionsMin} sections).
+- Chaque section doit contenir 200 à 500 mots de contenu réel, complet et détaillé.
+- Un contrat doit couvrir : préambule, définitions, objet, durée, obligations des parties, conditions financières, garanties, résiliation, litiges, dispositions finales, et toutes clauses spécifiques au type de contrat.
+- Ne tronque JAMAIS le contenu. Si le document nécessite 20 sections pour être complet, génères-en 20.
+
 Retourne ce JSON et rien d'autre:
 {
   "schema": "document.v1",
   "titre": "...",
-  "parties": { "cle": "valeur" },
+  "parties": { "Bailleur": "...", "Preneur": "..." },
   "sections": [
-    { "titre": "Article 1 — ...", "contenu": "texte complet minimum 80 mots..." },
-    { "titre": "Article 2 — ...", "contenu": "..." }
+    { "titre": "Préambule", "contenu": "texte complet 200+ mots..." },
+    { "titre": "Article 1 — Objet du contrat", "contenu": "texte complet 200+ mots..." },
+    { "titre": "Article 2 — ...", "contenu": "texte complet 200+ mots..." }
   ],
-  "clauses_speciales": ["clause 1", "clause 2"],
+  "clauses_speciales": ["clause détaillée 1", "clause détaillée 2"],
   "date_creation": "...",
   "pays": "..."
-}
-
-Minimum 6 sections pour un document complet.`;
+}`;
 }
 
 function jsonToHtml(doc: DocJson): string {
   const partyRows = doc.parties
     ? Object.entries(doc.parties).map(([k, v]) =>
-        `<tr><td style="font-weight:600;padding:4px 12px 4px 0">${k}</td><td>${v}</td></tr>`
+        `<tr><td style="font-weight:600;padding:6px 16px 6px 0;vertical-align:top;white-space:nowrap">${k}&nbsp;:</td><td style="padding:6px 0">${v}</td></tr>`
       ).join('')
     : '';
 
-  const sectionsHtml = doc.sections.map(s => {
+  const sectionsHtml = doc.sections.map((s, i) => {
     const articles = s.articles
-      ? s.articles.map(a => `<h3 style="color:#1565C0;font-size:.95rem;margin:14px 0 4px">${a.titre}</h3><p>${a.texte}</p>`).join('')
-      : `<p style="text-align:justify;line-height:1.7">${s.contenu}</p>`;
-    return `<h2 style="color:#0D2B4E;font-size:1.05rem;margin:22px 0 8px;border-bottom:1px solid #e0e0e0;padding-bottom:4px">${s.titre}</h2>${articles}`;
+      ? s.articles.map(a =>
+          `<h3 style="color:#1565C0;font-size:1rem;margin:18px 0 6px;font-weight:600">${a.titre}</h3><p style="text-align:justify;line-height:1.8;margin:0 0 12px">${a.texte}</p>`
+        ).join('')
+      : `<p style="text-align:justify;line-height:1.8;margin:0 0 12px;white-space:pre-wrap">${s.contenu}</p>`;
+
+    // Saut de page avant chaque section (sauf la première) pour impression/PDF
+    const pageBreak = i > 0 && i % 4 === 0 ? ' page-break-before:always;' : '';
+    return `<div style="${pageBreak}">
+<h2 style="color:#0D2B4E;font-size:1.1rem;margin:28px 0 10px;border-bottom:2px solid #1565C0;padding-bottom:6px;font-weight:700">${s.titre}</h2>
+${articles}
+</div>`;
   }).join('');
 
   const clausesHtml = doc.clauses_speciales?.length
-    ? `<h2 style="color:#0D2B4E;font-size:1.05rem;margin:22px 0 8px">Clauses spéciales</h2><ul>${doc.clauses_speciales.map(c => `<li style="margin-bottom:6px">${c}</li>`).join('')}</ul>`
+    ? `<div style="margin-top:32px;padding:20px;background:#f8f9ff;border-left:4px solid #1565C0;border-radius:4px">
+<h2 style="color:#0D2B4E;font-size:1.1rem;margin:0 0 14px;font-weight:700">Clauses spéciales</h2>
+<ol style="margin:0;padding-left:20px">${doc.clauses_speciales.map(c => `<li style="margin-bottom:10px;line-height:1.7;text-align:justify">${c}</li>`).join('')}</ol>
+</div>`
     : '';
 
-  return `
-<div style="font-family:Georgia,'Times New Roman',serif;line-height:1.65;max-width:800px;margin:0 auto">
-  <h1 style="color:#0D2B4E;text-align:center;font-size:1.5rem;letter-spacing:.5px;margin-bottom:16px">${doc.titre}</h1>
-  ${partyRows ? `<table style="width:100%;margin-bottom:20px;font-size:.95rem">${partyRows}</table>` : ''}
-  ${sectionsHtml}
-  ${clausesHtml}
-  <p style="margin-top:40px;font-size:.85rem;color:#757575;text-align:right">
-    Fait à ${doc.pays}, le ${doc.date_creation}
+  const signatureBlock = `
+<div style="margin-top:60px;display:flex;justify-content:space-between;gap:40px">
+  ${doc.parties ? Object.entries(doc.parties).slice(0, 3).map(([k]) =>
+    `<div style="flex:1;text-align:center">
+      <p style="font-weight:600;margin-bottom:60px">${k}</p>
+      <p style="border-top:1px solid #333;padding-top:6px;font-size:.85rem;color:#555">Signature et cachet</p>
+    </div>`
+  ).join('') : ''}
+</div>`;
+
+  return `<div style="font-family:Georgia,'Times New Roman',serif;font-size:11pt;line-height:1.7;color:#1a1a1a">
+
+<div style="text-align:center;margin-bottom:32px;padding:24px 0;border-bottom:3px double #0D2B4E">
+  <h1 style="color:#0D2B4E;font-size:1.6rem;letter-spacing:.5px;margin:0 0 8px;text-transform:uppercase">${doc.titre}</h1>
+  <p style="color:#555;font-size:.9rem;margin:0">Document établi conformément au droit ${doc.pays}</p>
+</div>
+
+${partyRows ? `<div style="margin-bottom:28px;padding:16px;background:#f5f7ff;border-radius:6px;border:1px solid #dde3f5">
+  <p style="font-weight:700;color:#0D2B4E;margin:0 0 10px;font-size:1rem">ENTRE LES SOUSSIGNÉS :</p>
+  <table style="width:100%;font-size:.95rem;border-collapse:collapse">${partyRows}</table>
+</div>` : ''}
+
+${sectionsHtml}
+
+${clausesHtml}
+
+<div style="margin-top:40px;padding-top:20px;border-top:1px solid #ccc">
+  <p style="text-align:center;color:#555;font-size:.9rem">
+    Fait à ${doc.pays}, le ${doc.date_creation}<br/>
+    En autant d'exemplaires originaux que de parties signataires.
   </p>
+</div>
+
+${signatureBlock}
+
 </div>`;
 }
 
