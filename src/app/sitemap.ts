@@ -40,6 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: { active: true },
       select: { code: true, updatedAt: true },
       orderBy: { popularity: 'desc' },
+      take: 5000, // top modèles — un sitemap de 12 000+ URLs ralentit la génération et le crawl
     });
     templateEntries = templates.map((t) => ({
       url: `${BASE}/documents/${t.code}`,

@@ -69,48 +69,109 @@ function ClasseBadge({ classe }: { classe: string | null }) {
   );
 }
 
-function normalize(s: string): string {
-  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-}
-
-function catalogueUrl(categorie: string | null, q: string): string {
+function catalogueUrl(categorie: string | null, q: string, page?: number): string {
   const params = new URLSearchParams();
   if (categorie) params.set('categorie', categorie);
   if (q) params.set('q', q);
+  if (page && page > 1) params.set('page', String(page));
   const qs = params.toString();
   return qs ? `/catalogue?${qs}` : '/catalogue';
 }
 
+/* Performance : ne jamais charger les 12 800+ mod\u00e8les d'un coup.
+   - Vue \u00ab toutes cat\u00e9gories \u00bb : top 9 par cat\u00e9gorie (aper\u00e7u) + lien \u00ab Voir tout \u00bb.
+   - Vue cat\u00e9gorie / recherche : pagination SQL (60 par page).
+   - `select` restreint : les colonnes lourdes (prompts\u2026) ne sortent jamais de la DB. */
+const APERCU_PAR_CATEGORIE = 9;
+const PAR_PAGE = 60;
+
+const CARD_SELECT = {
+  id: true, code: true, name: true, description: true,
+  classe: true, price: true, currency: true,
+  templateType: true, category: true,
+} as const;
+
+type CardTemplate = {
+  id: string; code: string; name: string; description: string | null;
+  classe: string | null; price: number; currency: string;
+  templateType: string | null; category: string;
+};
+
 export default async function CataloguePage({
   searchParams,
 }: {
-  searchParams: Promise<{ categorie?: string; q?: string }>;
+  searchParams: Promise<{ categorie?: string; q?: string; page?: string }>;
 }) {
-  const [{ t }, { categorie, q }] = await Promise.all([getDict(), searchParams]);
+  const [{ t }, { categorie, q, page: pageParam }] = await Promise.all([getDict(), searchParams]);
   const CATEGORIES = t.catalogue.categories;
   const filtre = categorie && CATEGORY_CODES.includes(categorie) ? categorie : null;
   const recherche = (q ?? '').trim().slice(0, 100);
+  const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1);
 
-  const all = await prisma.documentTemplate.findMany({
-    where: { active: true, ...(filtre ? { category: filtre } : {}) },
-    orderBy: [{ popularity: 'desc' }, { name: 'asc' }],
-  });
+  const where = {
+    active: true,
+    ...(filtre ? { category: filtre } : {}),
+    ...(recherche
+      ? {
+          OR: [
+            { name: { contains: recherche } },
+            { description: { contains: recherche } },
+            { category: { contains: recherche } },
+          ],
+        }
+      : {}),
+  };
 
-  const needle = normalize(recherche);
-  const templates = needle
-    ? all.filter((tpl) => {
-        const haystack = normalize(
-          `${tpl.name} ${tpl.description ?? ''} ${CATEGORIES[tpl.category] ?? ''} ${tpl.category}`
-        );
-        return haystack.includes(needle);
-      })
-    : all;
+  const modeAper\u00e7u = !filtre && !recherche;
 
-  const parCategorie = new Map<string, typeof templates>();
-  for (const key of CATEGORY_CODES) parCategorie.set(key, []);
-  for (const tpl of templates) {
-    if (!parCategorie.has(tpl.category)) parCategorie.set(tpl.category, []);
-    parCategorie.get(tpl.category)!.push(tpl);
+  let templates: CardTemplate[] = [];
+  let total = 0;
+  let totalPages = 1;
+  const parCategorie = new Map<string, CardTemplate[]>();
+  const countByCat = new Map<string, number>();
+
+  if (modeAper\u00e7u) {
+    // Top N par cat\u00e9gorie, en parall\u00e8le \u2014 reste l\u00e9ger m\u00eame avec 12 800+ mod\u00e8les.
+    const [counts, tops] = await Promise.all([
+      prisma.documentTemplate.groupBy({
+        by: ['category'],
+        where: { active: true },
+        _count: { id: true },
+      }),
+      Promise.all(
+        CATEGORY_CODES.map((code) =>
+          prisma.documentTemplate.findMany({
+            where: { active: true, category: code },
+            orderBy: [{ popularity: 'desc' }, { name: 'asc' }],
+            take: APERCU_PAR_CATEGORIE,
+            select: CARD_SELECT,
+          })
+        )
+      ),
+    ]);
+    for (const c of counts) countByCat.set(c.category, c._count.id);
+    CATEGORY_CODES.forEach((code, i) => {
+      if (tops[i].length > 0) parCategorie.set(code, tops[i]);
+    });
+    total = counts.reduce((s, c) => s + c._count.id, 0);
+    templates = tops.flat();
+  } else {
+    [total, templates] = await Promise.all([
+      prisma.documentTemplate.count({ where }),
+      prisma.documentTemplate.findMany({
+        where,
+        orderBy: [{ popularity: 'desc' }, { name: 'asc' }],
+        skip: (page - 1) * PAR_PAGE,
+        take: PAR_PAGE,
+        select: CARD_SELECT,
+      }),
+    ]);
+    totalPages = Math.max(1, Math.ceil(total / PAR_PAGE));
+    for (const tpl of templates) {
+      if (!parCategorie.has(tpl.category)) parCategorie.set(tpl.category, []);
+      parCategorie.get(tpl.category)!.push(tpl);
+    }
+    for (const [code, list] of parCategorie) countByCat.set(code, filtre ? total : list.length);
   }
 
   return (
@@ -184,8 +245,8 @@ export default async function CataloguePage({
         {/* Compteur */}
         <p className="text-muted mb-2">
           {recherche
-            ? <>{t.catalogue.resultatsPour(templates.length, recherche)}{filtre && t.catalogue.dansCategorie(CATEGORIES[filtre])}</>
-            : t.catalogue.modelesDisponibles(templates.length)
+            ? <>{t.catalogue.resultatsPour(total, recherche)}{filtre && t.catalogue.dansCategorie(CATEGORIES[filtre])}</>
+            : t.catalogue.modelesDisponibles(total)
           }
         </p>
 
@@ -229,9 +290,14 @@ export default async function CataloguePage({
           .filter(([, list]) => list.length > 0)
           .map(([code, list]) => (
             <section key={code} className="mb-3">
-              <h2 className="mb-2" style={{ fontSize: '1.3rem' }}>
+              <h2 className="mb-2" style={{ fontSize: '1.3rem', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 {CATEGORIES[code] ?? code}{' '}
-                <span className="badge badge-info">{list.length}</span>
+                <span className="badge badge-info">{countByCat.get(code) ?? list.length}</span>
+                {modeAperçu && (countByCat.get(code) ?? 0) > APERCU_PAR_CATEGORIE && (
+                  <Link href={catalogueUrl(code, '')} className="btn btn-outline btn-sm" style={{ marginLeft: 'auto' }}>
+                    Voir les {(countByCat.get(code) ?? 0).toLocaleString('fr-FR')} modèles →
+                  </Link>
+                )}
               </h2>
               <div className="grid grid-3">
                 {list.map((tpl) => (
@@ -267,10 +333,54 @@ export default async function CataloguePage({
               </div>
             </section>
           ))}
+
+        {/* Pagination (vue catégorie / recherche) */}
+        {!modeAperçu && totalPages > 1 && (
+          <nav aria-label="Pagination" className="flex mb-3" style={{ justifyContent: 'center', flexWrap: 'wrap', gap: 8 }}>
+            {page > 1 && (
+              <Link href={catalogueUrl(filtre, recherche, page - 1)} className="btn btn-outline btn-sm">
+                ← Précédent
+              </Link>
+            )}
+            {paginationPages(page, totalPages).map((p, i) =>
+              p === null ? (
+                <span key={`gap-${i}`} className="text-muted" style={{ padding: '4px 6px' }}>…</span>
+              ) : (
+                <Link
+                  key={p}
+                  href={catalogueUrl(filtre, recherche, p)}
+                  className={`btn btn-sm ${p === page ? 'btn-primary' : 'btn-outline'}`}
+                  aria-current={p === page ? 'page' : undefined}
+                >
+                  {p}
+                </Link>
+              )
+            )}
+            {page < totalPages && (
+              <Link href={catalogueUrl(filtre, recherche, page + 1)} className="btn btn-outline btn-sm">
+                Suivant →
+              </Link>
+            )}
+          </nav>
+        )}
       </main>
       <SiteFooter />
     </>
   );
+}
+
+/** Fenêtre de pagination : 1 … (p-1) p (p+1) … dernier. `null` = points de suspension. */
+function paginationPages(current: number, totalPages: number): (number | null)[] {
+  const pages = new Set<number>([1, totalPages, current - 1, current, current + 1]);
+  const sorted = [...pages].filter((p) => p >= 1 && p <= totalPages).sort((a, b) => a - b);
+  const out: (number | null)[] = [];
+  let prev = 0;
+  for (const p of sorted) {
+    if (prev && p - prev > 1) out.push(null);
+    out.push(p);
+    prev = p;
+  }
+  return out;
 }
 
 
