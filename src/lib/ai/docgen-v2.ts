@@ -4,6 +4,7 @@
 // de consignes de bail foncier, une lettre n'a pas de bloc « clauses spéciales ».
 import type { TemplateField, Answers } from '@/lib/docgen';
 import { MODEL_BY_NIVEAU, MAX_TOKENS, type Classe, type Niveau } from '@/lib/pricing';
+import { reviewDocument } from './qc';
 
 export interface DocGenInput {
   templateName: string;
@@ -411,6 +412,10 @@ export interface DocGenResult {
   tokensOut: number;
   tokensCached: number;
   durationMs: number;
+  /** Contrôle qualité post-génération (null si le QC a échoué — document livré tel quel) */
+  qcScore: number | null;
+  qcIssues: string[];
+  qcCorrected: boolean;
 }
 
 /**
@@ -465,18 +470,37 @@ export async function generateDocumentJson(input: DocGenInput): Promise<DocGenRe
     const raw = res.content[0]?.type === 'text' ? res.content[0].text.trim() : '';
     const clean = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
 
-    const doc: DocJson = parseOrRepair(clean);
+    let doc: DocJson = parseOrRepair(clean);
     if (!doc.sections || !Array.isArray(doc.sections) || doc.sections.length === 0) throw new Error('JSON invalide: sections manquantes');
+
+    // Contrôle qualité post-génération : relecture IA, correction des sections
+    // défectueuses, score 0-100. Échec du QC = document original livré tel quel.
+    let qcScore: number | null = null;
+    let qcIssues: string[] = [];
+    let qcCorrected = false;
+    const qc = await reviewDocument(doc, input.country);
+    if (qc) {
+      qcScore = qc.score;
+      qcIssues = qc.issues;
+      qcCorrected = qc.corrected;
+      if (qc.corrected) doc = qc.doc;
+      if (qc.issues.length > 0) {
+        console.log(`[QC] ${input.templateName} — score ${qc.score}/100, ${qc.issues.length} problème(s)${qc.corrected ? ', sections corrigées' : ''}:`, qc.issues.join(' | '));
+      }
+    }
 
     const usage = res.usage as { input_tokens: number; output_tokens: number; cache_read_input_tokens?: number };
     return {
       html: jsonToHtml(doc, famille),
       json: doc,
       model,
-      tokensIn: usage.input_tokens ?? 0,
-      tokensOut: usage.output_tokens ?? 0,
+      tokensIn: (usage.input_tokens ?? 0) + (qc?.tokensIn ?? 0),
+      tokensOut: (usage.output_tokens ?? 0) + (qc?.tokensOut ?? 0),
       tokensCached: usage.cache_read_input_tokens ?? 0,
       durationMs: Date.now() - t0,
+      qcScore,
+      qcIssues,
+      qcCorrected,
     };
   } catch (err) {
     console.error('[DocGen v2] Erreur:', err);

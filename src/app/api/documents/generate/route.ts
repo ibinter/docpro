@@ -98,6 +98,7 @@ export async function POST(req: NextRequest) {
   let contentHtml: string;
   let contentJson: string | null = null;
   let genProvider = 'template';
+  let aiQcScore: number | null = null;
 
   if (isExcel) {
     contentHtml = JSON.stringify(answers);
@@ -120,6 +121,7 @@ export async function POST(req: NextRequest) {
       contentHtml = result.html;
       contentJson = JSON.stringify(result.json);
       genProvider = 'claude';
+      aiQcScore = result.qcScore;
 
       // Journal de génération (CDC §11)
       try {
@@ -167,7 +169,8 @@ export async function POST(req: NextRequest) {
     contentHtml = renderTemplate(template.body, answers, fields);
   }
 
-  const qualityScore = computeQualityScore(fields, answers);
+  // Score qualité : le score du contrôle IA post-génération prime sur l'heuristique.
+  const qualityScore = aiQcScore ?? computeQualityScore(fields, answers);
   const answersJson = JSON.stringify(answers);
 
   // ── Mise à jour d'un aperçu existant (non payé) ───────────────────────────
