@@ -5,6 +5,7 @@
 import type { TemplateField, Answers } from '@/lib/docgen';
 import { MODEL_BY_NIVEAU, MAX_TOKENS, type Classe, type Niveau } from '@/lib/pricing';
 import { reviewDocument } from './qc';
+import { sectorKnowledge } from './sectors';
 
 export interface DocGenInput {
   templateName: string;
@@ -281,7 +282,10 @@ Tu peux ajouter des sections pertinentes pour ce modèle précis, jamais en reti
 CONSIGNES SPÉCIFIQUES À CE TYPE DE DOCUMENT :
 ${spec.consignes}
 
-${structureHint ? `REPÈRES DU MODÈLE ORIGINAL (à enrichir, pas à recopier) :\n${structureHint}\n` : ''}
+${niveau !== 'standard' ? (() => {
+    const sk = sectorKnowledge(category, niveau);
+    return sk ? `CONNAISSANCES SECTORIELLES (niveau ${niveau} — intègre ces éléments concrets dans le document, adaptés au cas du client ; cite les textes et utilise les fourchettes chiffrées comme repères réalistes) :\n${sk}\n\n` : '';
+  })() : ''}${structureHint ? `REPÈRES DU MODÈLE ORIGINAL (à enrichir, pas à recopier) :\n${structureHint}\n` : ''}
 Retourne UNIQUEMENT ce JSON, sans aucun texte avant ou après :
 {
   "schema": "${spec.schema}",
