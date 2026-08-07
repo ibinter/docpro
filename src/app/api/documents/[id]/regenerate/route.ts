@@ -57,6 +57,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       country: doc.country,
       classe,
       niveau,
+      category: doc.template.category,
     });
     if (result) {
       contentHtml = result.html;

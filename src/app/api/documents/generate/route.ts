@@ -113,6 +113,7 @@ export async function POST(req: NextRequest) {
       country,
       classe,
       niveau,
+      category: template.category,
     });
 
     if (result) {
