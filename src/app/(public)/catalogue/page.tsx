@@ -1,6 +1,7 @@
 ﻿// Catalogue public des modèles de documents (DocumentTemplate actifs)
 // + recherche plein texte (?q=) sur nom, description et catégorie.
 import Link from 'next/link';
+import { unstable_cache } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { formatFcfa, formatUsd, DEFAULT_PRICE_GRID, type Classe } from '@/lib/pricing';
 import { getDict } from '@/lib/i18n';
@@ -97,6 +98,54 @@ type CardTemplate = {
   templateType: string | null; category: string;
 };
 
+/* Cache 60 s : les données du catalogue sont identiques pour tous les visiteurs.
+   - Aperçu (compteurs + top 9 par catégorie) : une seule entrée de cache.
+   - Vues catégorie paginées : clé (categorie, page) — espace de clés fini.
+   La recherche libre reste en direct (clés illimitées, déjà < 1 s). */
+const getApercuCached = unstable_cache(
+  async () => {
+    const [counts, tops] = await Promise.all([
+      prisma.documentTemplate.groupBy({
+        by: ['category'],
+        where: { active: true },
+        _count: { id: true },
+      }),
+      Promise.all(
+        CATEGORY_CODES.map((code) =>
+          prisma.documentTemplate.findMany({
+            where: { active: true, category: code },
+            orderBy: [{ popularity: 'desc' }, { name: 'asc' }],
+            take: APERCU_PAR_CATEGORIE,
+            select: CARD_SELECT,
+          })
+        )
+      ),
+    ]);
+    return { counts, tops };
+  },
+  ['catalogue-apercu'],
+  { revalidate: 60 }
+);
+
+const getCategoriePageCached = unstable_cache(
+  async (category: string, page: number) => {
+    const where = { active: true, category };
+    const [total, templates] = await Promise.all([
+      prisma.documentTemplate.count({ where }),
+      prisma.documentTemplate.findMany({
+        where,
+        orderBy: [{ popularity: 'desc' }, { name: 'asc' }],
+        skip: (page - 1) * PAR_PAGE,
+        take: PAR_PAGE,
+        select: CARD_SELECT,
+      }),
+    ]);
+    return { total, templates };
+  },
+  ['catalogue-categorie'],
+  { revalidate: 60 }
+);
+
 export default async function CataloguePage({
   searchParams,
 }: {
@@ -131,24 +180,8 @@ export default async function CataloguePage({
   const countByCat = new Map<string, number>();
 
   if (modeAper\u00e7u) {
-    // Top N par cat\u00e9gorie, en parall\u00e8le \u2014 reste l\u00e9ger m\u00eame avec 12 800+ mod\u00e8les.
-    const [counts, tops] = await Promise.all([
-      prisma.documentTemplate.groupBy({
-        by: ['category'],
-        where: { active: true },
-        _count: { id: true },
-      }),
-      Promise.all(
-        CATEGORY_CODES.map((code) =>
-          prisma.documentTemplate.findMany({
-            where: { active: true, category: code },
-            orderBy: [{ popularity: 'desc' }, { name: 'asc' }],
-            take: APERCU_PAR_CATEGORIE,
-            select: CARD_SELECT,
-          })
-        )
-      ),
-    ]);
+    // Aper\u00e7u servi depuis le cache (60 s) \u2014 une seule entr\u00e9e pour tous les visiteurs.
+    const { counts, tops } = await getApercuCached();
     for (const c of counts) countByCat.set(c.category, c._count.id);
     CATEGORY_CODES.forEach((code, i) => {
       if (tops[i].length > 0) parCategorie.set(code, tops[i]);
@@ -156,16 +189,22 @@ export default async function CataloguePage({
     total = counts.reduce((s, c) => s + c._count.id, 0);
     templates = tops.flat();
   } else {
-    [total, templates] = await Promise.all([
-      prisma.documentTemplate.count({ where }),
-      prisma.documentTemplate.findMany({
-        where,
-        orderBy: [{ popularity: 'desc' }, { name: 'asc' }],
-        skip: (page - 1) * PAR_PAGE,
-        take: PAR_PAGE,
-        select: CARD_SELECT,
-      }),
-    ]);
+    if (filtre && !recherche) {
+      // Vue cat\u00e9gorie sans recherche : cache 60 s par (cat\u00e9gorie, page).
+      ({ total, templates } = await getCategoriePageCached(filtre, page));
+    } else {
+      // Recherche libre : en direct (cl\u00e9s de cache illimit\u00e9es, requ\u00eate d\u00e9j\u00e0 < 1 s).
+      [total, templates] = await Promise.all([
+        prisma.documentTemplate.count({ where }),
+        prisma.documentTemplate.findMany({
+          where,
+          orderBy: [{ popularity: 'desc' }, { name: 'asc' }],
+          skip: (page - 1) * PAR_PAGE,
+          take: PAR_PAGE,
+          select: CARD_SELECT,
+        }),
+      ]);
+    }
     totalPages = Math.max(1, Math.ceil(total / PAR_PAGE));
     for (const tpl of templates) {
       if (!parCategorie.has(tpl.category)) parCategorie.set(tpl.category, []);
