@@ -11,6 +11,7 @@ const SECTIONS: Section[] = [
     links: [
       { href: '/admin', label: 'Tableau de bord' },
       { href: '/admin/analytics', label: 'Analytics' },
+      { href: '/admin/qualite', label: 'Qualité IA' },
     ],
   },
   {
