@@ -7,13 +7,18 @@ export const dynamic = 'force-dynamic';
 
 type Ventilation = { label: string; count: number; totalXof: number };
 
-function groupSum<T>(rows: T[], key: (r: T) => string, amount: (r: T) => number): Ventilation[] {
+/** Agrège des lignes groupBy (déjà agrégées en SQL) par libellé, avec conversion en XOF. */
+function fromGroups<T extends { currency: string; _sum: { total: number | null }; _count: { _all: number } }>(
+  rows: T[],
+  label: (r: T) => string,
+  toXof: (total: number, currency: string) => number,
+): Ventilation[] {
   const map = new Map<string, Ventilation>();
   for (const r of rows) {
-    const k = key(r) || '—';
+    const k = label(r) || '—';
     const cur = map.get(k) ?? { label: k, count: 0, totalXof: 0 };
-    cur.count += 1;
-    cur.totalXof += amount(r);
+    cur.count += r._count._all;
+    cur.totalXof += toXof(r._sum.total ?? 0, r.currency);
     map.set(k, cur);
   }
   return [...map.values()].sort((a, b) => b.totalXof - a.totalXof);
@@ -57,9 +62,20 @@ export default async function AdminDashboard() {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const in7days = new Date(now.getTime() + 7 * 86400_000);
 
+  // Toutes les ventilations sont calculées par la base (groupBy) : aucune commande
+  // n'est chargée en mémoire — le tableau de bord reste instantané quel que soit
+  // le volume de commandes.
+  const PAYEE = { status: 'payee' } as const;
+
   const [
     currencies,
-    paidOrders,
+    plans,
+    grpDevise,
+    grpJour,
+    grpMois,
+    grpForfait,
+    grpMoyen,
+    grpPays,
     txReussies,
     txEnAttente,
     txAVerifier,
@@ -67,13 +83,17 @@ export default async function AdminDashboard() {
     licProvisoires,
     licExpirant,
     licExpirees,
-    trialLicenses,
+    trialUsers,
+    convertedUsers,
   ] = await Promise.all([
-    prisma.currency.findMany(),
-    prisma.order.findMany({
-      where: { status: 'payee' },
-      include: { plan: { select: { name: true } } },
-    }),
+    prisma.currency.findMany({ select: { code: true, rateToXof: true } }),
+    prisma.plan.findMany({ select: { id: true, name: true } }),
+    prisma.order.groupBy({ by: ['currency'], where: PAYEE, _sum: { total: true }, _count: { _all: true } }),
+    prisma.order.groupBy({ by: ['currency'], where: { ...PAYEE, updatedAt: { gte: startOfDay } }, _sum: { total: true }, _count: { _all: true } }),
+    prisma.order.groupBy({ by: ['currency'], where: { ...PAYEE, updatedAt: { gte: startOfMonth } }, _sum: { total: true }, _count: { _all: true } }),
+    prisma.order.groupBy({ by: ['planId', 'currency'], where: PAYEE, _sum: { total: true }, _count: { _all: true } }),
+    prisma.order.groupBy({ by: ['paymentMethod', 'currency'], where: PAYEE, _sum: { total: true }, _count: { _all: true } }),
+    prisma.order.groupBy({ by: ['billingCountry', 'currency'], where: PAYEE, _sum: { total: true }, _count: { _all: true } }),
     prisma.transaction.count({ where: { status: { in: ['reussie', 'validee_manuellement'] } } }),
     prisma.transaction.count({ where: { status: { in: ['initialisee', 'en_attente', 'en_cours'] } } }),
     prisma.transaction.count({ where: { status: 'a_verifier' } }),
@@ -81,37 +101,29 @@ export default async function AdminDashboard() {
     prisma.license.count({ where: { status: 'provisoire' } }),
     prisma.license.count({ where: { status: 'active', endDate: { gte: now, lte: in7days } } }),
     prisma.license.count({ where: { status: 'expiree' } }),
-    prisma.license.findMany({ where: { orderId: null }, select: { userId: true } }),
+    // Conversion essai → payant : un groupBy par utilisateur suffit (pas de lignes complètes)
+    prisma.license.groupBy({ by: ['userId'], where: { orderId: null } }),
+    prisma.license.groupBy({ by: ['userId'], where: { orderId: { not: null } } }),
   ]);
 
-  // Taux de conversion essai → payant (approximation : licences sans commande = essais)
-  const trialUserIds = [...new Set(trialLicenses.map((l) => l.userId))];
-  const convertedUsers = trialUserIds.length
-    ? await prisma.license.findMany({
-        where: { userId: { in: trialUserIds }, orderId: { not: null } },
-        select: { userId: true },
-        distinct: ['userId'],
-      })
-    : [];
-  const conversionRate = trialUserIds.length
-    ? Math.round((convertedUsers.length / trialUserIds.length) * 100)
-    : 0;
+  const payantIds = new Set(convertedUsers.map((l) => l.userId));
+  const convertis = trialUsers.filter((l) => payantIds.has(l.userId)).length;
+  const conversionRate = trialUsers.length ? Math.round((convertis / trialUsers.length) * 100) : 0;
 
   const rates: Record<string, number> = Object.fromEntries(currencies.map((c) => [c.code, c.rateToXof || 1]));
   const toXof = (total: number, currency: string) => Math.round(total * (rates[currency] ?? 1));
+  const sumXof = (rows: { currency: string; _sum: { total: number | null } }[]) =>
+    rows.reduce((s, r) => s + toXof(r._sum.total ?? 0, r.currency), 0);
 
-  const caTotal = paidOrders.reduce((s, o) => s + toXof(o.total, o.currency), 0);
-  const caJour = paidOrders
-    .filter((o) => o.updatedAt >= startOfDay)
-    .reduce((s, o) => s + toXof(o.total, o.currency), 0);
-  const caMois = paidOrders
-    .filter((o) => o.updatedAt >= startOfMonth)
-    .reduce((s, o) => s + toXof(o.total, o.currency), 0);
+  const caTotal = sumXof(grpDevise);
+  const caJour = sumXof(grpJour);
+  const caMois = sumXof(grpMois);
 
-  const parForfait = groupSum(paidOrders, (o) => o.plan?.name ?? 'Document à l’unité', (o) => toXof(o.total, o.currency));
-  const parMoyen = groupSum(paidOrders, (o) => o.paymentMethod ?? '—', (o) => toXof(o.total, o.currency));
-  const parDevise = groupSum(paidOrders, (o) => o.currency, (o) => toXof(o.total, o.currency));
-  const parPays = groupSum(paidOrders, (o) => o.billingCountry ?? '—', (o) => toXof(o.total, o.currency));
+  const planName = new Map(plans.map((p) => [p.id, p.name]));
+  const parForfait = fromGroups(grpForfait, (r) => (r.planId ? planName.get(r.planId) ?? 'Forfait supprimé' : 'Document à l’unité'), toXof);
+  const parMoyen = fromGroups(grpMoyen, (r) => r.paymentMethod ?? '—', toXof);
+  const parDevise = fromGroups(grpDevise, (r) => r.currency, toXof);
+  const parPays = fromGroups(grpPays, (r) => r.billingCountry ?? '—', toXof);
 
   return (
     <>
@@ -177,7 +189,7 @@ export default async function AdminDashboard() {
           <div className="stat-label">Conversion essai → payant</div>
           <div className="stat-value">{conversionRate}%</div>
           <span className="text-small text-muted">
-            {convertedUsers.length}/{trialUserIds.length} comptes essai
+            {convertis}/{trialUsers.length} comptes essai
           </span>
         </div>
       </div>

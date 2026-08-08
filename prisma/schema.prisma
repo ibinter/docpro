@@ -138,6 +138,10 @@ model License {
   updatedAt         DateTime      @updatedAt
 
   renewals LicenseEvent[]
+
+  @@index([status])
+  @@index([status, endDate])
+  @@index([userId, orderId])
 }
 
 // Historique immuable du cycle de vie d'une licence (jamais écrasé)
@@ -183,6 +187,10 @@ model Order {
   transactions Transaction[]
   license      License?
   invoices     Invoice[]
+
+  @@index([status])
+  @@index([status, updatedAt])
+  @@index([createdAt])
 }
 
 model Transaction {
@@ -214,6 +222,9 @@ model Transaction {
   updatedAt      DateTime  @updatedAt
 
   proofs PaymentProof[]
+
+  @@index([status])
+  @@index([createdAt])
 }
 
 model WebhookEvent {

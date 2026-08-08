@@ -169,6 +169,142 @@ h1, h2, h3, h4 { color: var(--navy); line-height: 1.25; }
 .sidebar .sidebar-title { padding: 8px 24px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-l); margin-top: 14px; }
 .main-content { flex: 1; padding: 32px; min-width: 0; }
 
+/* ═══ Console SuperAdmin — barre latérale fluide ═══ */
+.adminnav {
+  width: 262px; flex-shrink: 0; align-self: stretch;
+  background: linear-gradient(180deg, #0D2B4E 0%, #0A2340 100%);
+  color: #E3EAF3;
+  display: flex; flex-direction: column;
+  position: sticky; top: 60px; height: calc(100vh - 60px);
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  transition: width 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 60;
+}
+.adminnav.is-replie { width: 62px; }
+
+/* En-tête : recherche + bouton de repli */
+.adminnav-tete {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.adminnav-recherche {
+  flex: 1; display: flex; align-items: center; gap: 7px; min-width: 0;
+  background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px; padding: 0 9px; height: 34px;
+  transition: border-color 0.18s, background 0.18s;
+}
+.adminnav-recherche:focus-within { border-color: rgba(255, 213, 79, 0.55); background: rgba(255, 255, 255, 0.11); }
+.adminnav-recherche > span { color: #8FA6C0; font-size: 0.95rem; flex-shrink: 0; }
+.adminnav-recherche input {
+  flex: 1; min-width: 0; background: transparent; border: none; outline: none;
+  color: #fff; font-size: 0.85rem; font-family: inherit;
+}
+.adminnav-recherche input::placeholder { color: #7D93AD; }
+.adminnav-recherche button {
+  background: none; border: none; color: #8FA6C0; cursor: pointer;
+  font-size: 1.05rem; line-height: 1; padding: 0 2px; flex-shrink: 0;
+}
+.adminnav-recherche button:hover { color: #fff; }
+.adminnav-toggle {
+  flex-shrink: 0; width: 34px; height: 34px; border-radius: 8px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.09);
+  color: #A9BDD4; font-size: 0.9rem; line-height: 1;
+  transition: background 0.18s, color 0.18s;
+}
+.adminnav-toggle:hover { background: rgba(255, 213, 79, 0.16); color: var(--gold-l); }
+
+/* Corps défilant */
+.adminnav-corps { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 0 16px; }
+.adminnav-corps::-webkit-scrollbar { width: 6px; }
+.adminnav-corps::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.14); border-radius: 3px; }
+.adminnav-corps::-webkit-scrollbar-track { background: transparent; }
+
+.adminnav-section { margin-bottom: 2px; }
+.adminnav-titre {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 18px 7px; background: none; border: none; cursor: pointer;
+  color: #7D93AD; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; font-family: inherit;
+  transition: color 0.18s;
+}
+.adminnav-titre:hover { color: #B8CCE2; }
+.adminnav-titre.a-actif { color: var(--gold-l); }
+.adminnav-chevron { font-size: 0.7rem; transition: transform 0.24s ease; opacity: 0.75; }
+.adminnav-chevron.est-ouvert { transform: rotate(180deg); }
+
+.adminnav-liens {
+  overflow: hidden;
+  transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+}
+
+.adminnav-lien {
+  position: relative; display: flex; align-items: center; gap: 11px;
+  margin: 2px 10px; padding: 9px 12px; border-radius: 8px;
+  color: #B9C9DB; font-size: 0.875rem; font-weight: 500; text-decoration: none;
+  transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+.adminnav-lien:hover { background: rgba(255, 255, 255, 0.075); color: #fff; text-decoration: none; transform: translateX(2px); }
+.adminnav-lien.actif {
+  background: linear-gradient(90deg, rgba(255, 213, 79, 0.17), rgba(255, 213, 79, 0.04));
+  color: #fff; font-weight: 600;
+}
+.adminnav-lien.actif::before {
+  content: ''; position: absolute; left: -10px; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 22px; border-radius: 0 3px 3px 0; background: var(--gold-l);
+}
+.adminnav-icone {
+  flex-shrink: 0; width: 20px; text-align: center; font-size: 0.95rem;
+  opacity: 0.82; transition: opacity 0.16s;
+}
+.adminnav-lien.actif .adminnav-icone { opacity: 1; color: var(--gold-l); }
+.adminnav-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Bulle d'info en mode replié */
+.adminnav-bulle {
+  position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%);
+  background: #08192E; color: #fff; padding: 6px 12px; border-radius: 7px;
+  font-size: 0.8rem; white-space: nowrap; pointer-events: none;
+  opacity: 0; visibility: hidden; transition: opacity 0.16s ease;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.09);
+  z-index: 70;
+}
+.adminnav.is-replie .adminnav-lien:hover .adminnav-bulle { opacity: 1; visibility: visible; }
+.adminnav.is-replie .adminnav-lien { justify-content: center; padding: 10px 0; margin: 2px 8px; }
+.adminnav.is-replie .adminnav-lien.actif::before { left: -8px; }
+.adminnav.is-replie .adminnav-section { margin-bottom: 6px; }
+.adminnav.is-replie .adminnav-section + .adminnav-section { border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 6px; }
+
+.adminnav-vide { padding: 18px; color: #7D93AD; font-size: 0.83rem; text-align: center; }
+
+.adminnav-pied { padding: 12px 18px; border-top: 1px solid rgba(255, 255, 255, 0.07); }
+.adminnav-retour { color: #8FA6C0; font-size: 0.8rem; text-decoration: none; }
+.adminnav-retour:hover { color: var(--gold-l); text-decoration: none; }
+
+/* Mobile : tiroir coulissant */
+.adminnav-burger { display: none; }
+.adminnav-overlay { display: none; }
+
+@media (max-width: 900px) {
+  .adminnav-burger {
+    display: inline-flex; align-items: center; gap: 6px;
+    position: fixed; bottom: 18px; left: 18px; z-index: 80;
+    background: var(--navy); color: #fff; border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 24px; padding: 10px 18px; font-size: 0.85rem; font-weight: 600;
+    cursor: pointer; box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28); font-family: inherit;
+  }
+  .adminnav-overlay {
+    display: block; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 75;
+  }
+  .adminnav {
+    position: fixed; top: 0; left: 0; height: 100vh; z-index: 78;
+    transform: translateX(-100%); transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 262px;
+  }
+  .adminnav.is-ouvert { transform: translateX(0); }
+  .adminnav.is-replie { width: 262px; }
+  .adminnav-toggle { display: none; }
+}
+
 /* ── Hero (landing) ── */
 .hero {
   background: linear-gradient(135deg, var(--navy) 0%, var(--cobalt) 100%);

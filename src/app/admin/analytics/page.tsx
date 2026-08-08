@@ -112,9 +112,12 @@ export default async function AdminAnalyticsPage() {
         select: { total: true, currency: true, updatedAt: true },
       }),
       prisma.order.count(),
-      prisma.order.findMany({
+      // Ventilation par moyen de paiement : agrégée en SQL (aucune commande chargée)
+      prisma.order.groupBy({
+        by: ['paymentMethod', 'currency'],
         where: { status: 'payee' },
-        select: { total: true, currency: true, paymentMethod: true },
+        _sum: { total: true },
+        _count: { _all: true },
       }),
       prisma.user.findMany({
         where: { createdAt: { gte: since12w } },
@@ -126,15 +129,20 @@ export default async function AdminAnalyticsPage() {
         orderBy: { _count: { templateId: 'desc' } },
         take: 10,
       }),
-      prisma.license.findMany({
+      // MRR : nombre de licences actives par forfait (agrégé), prix lus une fois
+      prisma.license.groupBy({
+        by: ['planId'],
         where: { status: { in: ['active', 'grace'] } },
-        select: {
-          plan: {
-            select: { name: true, price: true, currency: true, durationType: true, durationValue: true },
-          },
-        },
+        _count: { _all: true },
       }),
     ]);
+
+  const plansMrr = activeLicenses.length
+    ? await prisma.plan.findMany({
+        where: { id: { in: activeLicenses.map((l) => l.planId) } },
+        select: { id: true, name: true, price: true, currency: true, durationType: true, durationValue: true },
+      })
+    : [];
 
   const rates: Record<string, number> = Object.fromEntries(
     currencies.map((c) => [c.code, c.rateToXof || 1]),
@@ -185,11 +193,11 @@ export default async function AdminAnalyticsPage() {
 
   // ── 4. Répartition des moyens de paiement (commandes payées, équiv. XOF) ──
   const byMethod = new Map<string, { value: number; count: number }>();
-  for (const o of paidOrdersAll) {
-    const k = o.paymentMethod ?? '—';
+  for (const g of paidOrdersAll) {
+    const k = g.paymentMethod ?? '—';
     const cur = byMethod.get(k) ?? { value: 0, count: 0 };
-    cur.value += toXof(o.total, o.currency);
-    cur.count += 1;
+    cur.value += toXof(g._sum.total ?? 0, g.currency);
+    cur.count += g._count._all;
     byMethod.set(k, cur);
   }
   const methodRows = [...byMethod.entries()]
@@ -197,11 +205,16 @@ export default async function AdminAnalyticsPage() {
     .sort((a, b) => b.value - a.value);
 
   // ── 5. Entonnoir commandes créées → payées ──
-  const paidCount = paidOrdersAll.length;
+  const paidCount = paidOrdersAll.reduce((s, g) => s + g._count._all, 0);
   const conversionRate = allOrdersCount > 0 ? Math.round((paidCount / allOrdersCount) * 100) : 0;
 
-  // ── 6. MRR estimé (licences actives × prix mensuel équivalent) ──
-  const mrr = activeLicenses.reduce((s, l) => s + monthlyEquivalentXof(l.plan, toXof), 0);
+  // ── 6. MRR estimé (licences actives × prix mensuel équivalent du forfait) ──
+  const planById = new Map(plansMrr.map((p) => [p.id, p]));
+  const licencesActives = activeLicenses.reduce((s, l) => s + l._count._all, 0);
+  const mrr = activeLicenses.reduce((s, l) => {
+    const plan = planById.get(l.planId);
+    return plan ? s + monthlyEquivalentXof(plan, toXof) * l._count._all : s;
+  }, 0);
 
   return (
     <>
@@ -219,7 +232,7 @@ export default async function AdminAnalyticsPage() {
         <div className="stat stat-teal">
           <div className="stat-label">MRR estimé</div>
           <div className="stat-value">{fmt(mrr)}</div>
-          <span className="text-small text-muted">{activeLicenses.length} licence(s) active(s)</span>
+          <span className="text-small text-muted">{licencesActives} licence(s) active(s)</span>
         </div>
         <div className="stat">
           <div className="stat-label">Commandes créées</div>
