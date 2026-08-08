@@ -2,8 +2,9 @@
 // Servi sur /sitemap.xml (runtime Node : Prisma autorisé ici, pas en Edge).
 import type { MetadataRoute } from 'next';
 import { prisma } from '@/lib/db';
+import { siteUrl } from '@/lib/site-url';
 
-const BASE = (process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+const BASE = siteUrl();
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
@@ -20,6 +21,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/aide`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE}/faq`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE}/guide`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE}/tutoriels`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE}/nouveautes`, lastModified: now, changeFrequency: 'weekly', priority: 0.5 },
+    { url: `${BASE}/developpeurs`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE}/packs`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${BASE}/statut`, lastModified: now, changeFrequency: 'hourly', priority: 0.5 },
     // Légal
     { url: `${BASE}/cgv`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
