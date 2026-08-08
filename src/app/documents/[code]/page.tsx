@@ -121,25 +121,61 @@ export default async function QuestionnairePage({
         <NiveauSelectorSection classeDoc={classeDoc} />
 
         {user ? (
-          <div className="alert alert-info">
-            ✨ Vos informations de profil ont été pré-remplies automatiquement — vérifiez-les puis complétez le reste.
-          </div>
-        ) : (
-          <div className="alert alert-info">
-            💡 <Link href="/connexion">Connectez-vous</Link> pour pré-remplir automatiquement vos informations
-            et retrouver vos documents dans votre espace.
-          </div>
-        )}
+          <>
+            <div className="alert alert-info">
+              ✨ Vos informations de profil ont été pré-remplies automatiquement — vérifiez-les puis complétez le reste.
+            </div>
 
-        <QuestionnaireForm
-          templateCode={template.code}
-          fields={fields}
-          prefill={prefill}
-          documentId={editingId}
-          aiEnabled={aiAvailable()}
-          countries={DOCUMENT_COUNTRIES}
-          defaultCountry={defaultCountry}
-        />
+            <QuestionnaireForm
+              templateCode={template.code}
+              fields={fields}
+              prefill={prefill}
+              documentId={editingId}
+              aiEnabled={aiAvailable()}
+              countries={DOCUMENT_COUNTRIES}
+              defaultCountry={defaultCountry}
+            />
+          </>
+        ) : (
+          /* Compte obligatoire : le questionnaire n'est pas rendu tant que le
+             visiteur n'est pas inscrit. La création de compte est gratuite. */
+          <section
+            style={{
+              marginTop: 20, padding: '28px 26px', borderRadius: 12,
+              background: 'linear-gradient(135deg,#0D2B4E,#1565C0)', color: '#fff',
+            }}
+          >
+            <h2 style={{ color: '#fff', fontSize: '1.2rem', margin: '0 0 10px' }}>
+              Créez votre compte gratuit pour continuer
+            </h2>
+            <p style={{ opacity: .88, lineHeight: 1.7, margin: '0 0 18px', maxWidth: 560 }}>
+              La création de compte est gratuite et immédiate. Elle vous donne accès au
+              questionnaire, à l’assistant intelligent et à l’historique de vos documents.
+            </p>
+
+            <ul style={{ margin: '0 0 22px', paddingLeft: 20, lineHeight: 1.9, fontSize: '.92rem', opacity: .9 }}>
+              <li>Vos informations sont pré-remplies à chaque nouveau document</li>
+              <li>Vos documents restent disponibles dans votre espace</li>
+              <li>Vous suivez vos paiements et téléchargez vos factures</li>
+            </ul>
+
+            <div className="flex" style={{ flexWrap: 'wrap', gap: 12 }}>
+              <Link
+                href={`/inscription?next=${encodeURIComponent(`/documents/${template.code}`)}`}
+                className="btn btn-gold btn-lg"
+              >
+                Créer mon compte gratuit
+              </Link>
+              <Link
+                href={`/connexion?next=${encodeURIComponent(`/documents/${template.code}`)}`}
+                className="btn btn-outline"
+                style={{ borderColor: 'rgba(255,255,255,.5)', color: '#fff' }}
+              >
+                J’ai déjà un compte
+              </Link>
+            </div>
+          </section>
+        )}
 
         {/* Documents similaires — même sous-catégorie, repli catégorie */}
         {similaires.length > 0 && (

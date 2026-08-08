@@ -15,14 +15,16 @@ export const metadata = {
 export default async function ConnexionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ erreur?: string }>;
+  searchParams: Promise<{ erreur?: string; next?: string }>;
 }) {
   const user = await getSessionUser();
   if (user) {
     redirect(user.role === 'admin' || user.role === 'superadmin' ? '/admin' : '/compte');
   }
-  const { erreur } = await searchParams;
+  const { erreur, next } = await searchParams;
   const message = authErrorMessage(erreur);
+  // `next` : chemin interne uniquement (jamais une URL absolue vers un tiers).
+  const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : null;
 
   return (
     <>
@@ -36,7 +38,10 @@ export default async function ConnexionPage({
 
           {message && <div className="alert alert-danger">{message}</div>}
 
-          <form method="POST" action="/api/auth/connexion">
+          <form
+            method="POST"
+            action={safeNext ? `/api/auth/connexion?next=${encodeURIComponent(safeNext)}` : '/api/auth/connexion'}
+          >
             <div className="field">
               <label className="label" htmlFor="email">Adresse email</label>
               <input className="input" id="email" name="email" type="email" required maxLength={190} autoComplete="email" placeholder="vous@exemple.com" />
@@ -51,7 +56,10 @@ export default async function ConnexionPage({
           </form>
 
           <p className="text-center text-small mt-2">
-            Pas encore de compte&nbsp;? <Link href="/inscription">Créez-en un gratuitement</Link>
+            Pas encore de compte&nbsp;?{' '}
+            <Link href={safeNext ? `/inscription?next=${encodeURIComponent(safeNext)}` : '/inscription'}>
+              Créez-en un gratuitement
+            </Link>
           </p>
         </div>
       </main>

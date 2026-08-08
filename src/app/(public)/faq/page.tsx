@@ -11,7 +11,7 @@ const FAQ: { cat: string; icon: string; id: string; items: { q: string; r: strin
   {
     cat: 'Démarrage', icon: '🚀', id: 'demarrage',
     items: [
-      { q: "Dois-je créer un compte pour générer un document ?", r: "Non. Vous pouvez générer et prévisualiser n'importe quel document gratuitement sans compte. Un compte est requis uniquement pour télécharger le document ou accéder à votre historique." },
+      { q: "Dois-je créer un compte pour générer un document ?", r: "Oui. La création de compte est gratuite et immédiate : elle donne accès au questionnaire, à l'assistant intelligent, à l'historique de vos documents et au suivi de vos paiements. Vos informations sont ensuite pré-remplies à chaque nouveau document." },
       { q: "Comment créer un compte ?", r: "Cliquez sur « Créer un compte » en haut de la page. Renseignez votre nom, email et mot de passe. Votre compte est actif immédiatement." },
       { q: "Est-ce que la première utilisation est gratuite ?", r: "Oui. La prévisualisation de tout document est gratuite. Des crédits d'essai peuvent être disponibles sur votre compte pour tester la génération complète." },
       { q: "Combien de temps faut-il pour obtenir un document ?", r: "En général moins de 30 secondes pour le niveau Standard, 1 à 2 minutes pour Pro et Expert. Vous voyez le document se rédiger en temps réel." },

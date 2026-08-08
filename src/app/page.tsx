@@ -82,7 +82,7 @@ const AVANTAGES = [
 ];
 
 const FAQ_ITEMS = [
-  { q: 'Dois-je créer un compte pour générer un document ?', r: 'Non. Vous pouvez générer et prévisualiser un document sans compte. Le compte est nécessaire uniquement pour télécharger ou accéder à votre historique.' },
+  { q: 'Dois-je créer un compte pour générer un document ?', r: 'Oui, et c\'est gratuit et immédiat. Le compte donne accès au questionnaire, à l\'assistant intelligent et à l\'historique de vos documents. Vos informations sont pré-remplies à chaque nouvelle génération.' },
   { q: 'Comment payer ? Les cartes bancaires sont-elles acceptées ?', r: 'Nous acceptons Orange Money, MTN MoMo, Wave, Moov Money et d\'autres moyens Mobile Money. Pas besoin de carte bancaire. Le paiement se fait depuis votre téléphone en quelques secondes.' },
   { q: 'Les documents sont-ils conformes aux lois africaines ?', r: 'Oui. Chaque document est généré selon les lois du pays sélectionné : Acte uniforme OHADA, codes du travail locaux, droit UEMOA, CEMAC. Nos modèles sont régulièrement mis à jour.' },
   { q: 'Quelle est la différence entre Standard, Pro et Expert ?', r: 'Standard : document complet en PDF, conformé OHADA. Pro : plus détaillé, PDF + Word (modifiable), avec personnalisation sectorielle. Expert : niveau notarial, tous formats, avec jurisprudence locale et relecture humaine.' },
@@ -170,7 +170,7 @@ export default async function HomePage() {
 
           {/* ══ 7.5 — PREUVES DE CONFIANCE ══ */}
           <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap', opacity: .8, fontSize: '.85rem' }}>
-            {['✓ Sans inscription obligatoire', '✓ Paiement Mobile Money accepté', '✓ Document prêt en 30 secondes', '✓ À partir de 100 FCFA · $0.17'].map(item => (
+            {['✓ Compte gratuit en 30 secondes', '✓ Paiement Mobile Money accepté', '✓ Document prêt en 30 secondes', '✓ À partir de 100 FCFA · $0.17'].map(item => (
               <span key={item}>{item}</span>
             ))}
           </div>
@@ -397,7 +397,7 @@ export default async function HomePage() {
             ))}
           </div>
           <p className="text-center mt-4">
-            <Link href="/catalogue" className="btn btn-gold btn-lg">Essayer maintenant — sans inscription</Link>
+            <Link href="/catalogue" className="btn btn-gold btn-lg">Essayer maintenant — compte gratuit</Link>
           </p>
         </div>
       </section>
@@ -774,7 +774,7 @@ export default async function HomePage() {
             Générez votre premier document maintenant
           </h2>
           <p style={{ opacity: .85, fontSize: '1.05rem', maxWidth: 480, margin: '0 auto 32px', lineHeight: 1.6 }}>
-            Sans inscription. Sans abonnement. Votre document professionnel en 30 secondes, dès <strong style={{ color: '#FFD700' }}>100 FCFA</strong>.
+            Compte gratuit. Sans abonnement. Votre document professionnel en 30 secondes, dès <strong style={{ color: '#FFD700' }}>100 FCFA</strong>.
           </p>
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/catalogue" className="btn btn-gold btn-lg" style={{ fontSize: '1.05rem', padding: '14px 36px' }}>

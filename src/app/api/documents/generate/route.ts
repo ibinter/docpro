@@ -23,6 +23,19 @@ function checkRateLimit(key: string, max: number): boolean {
 }
 
 export async function POST(req: NextRequest) {
+  // Compte obligatoire — contrôlé AVANT toute validation, pour ne pas divulguer
+  // la structure du questionnaire à un visiteur non inscrit.
+  const user = await getSessionUser();
+  if (!user) {
+    return NextResponse.json(
+      {
+        error: 'Créez un compte gratuit pour générer votre document. C’est immédiat.',
+        requiresAuth: true,
+      },
+      { status: 401 }
+    );
+  }
+
   let body: {
     code?: string;
     answers?: unknown;
@@ -70,14 +83,8 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const user = await getSessionUser();
-
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown'
-  const rlKey = user ? 'u:' + user.id : 'ip:' + ip
-  if (!checkRateLimit(rlKey, user ? 20 : 5)) return NextResponse.json({ error: 'Trop de generations. Reessayez dans une heure.' }, { status: 429 })
-
-  if ((niveau === 'pro' || niveau === 'expert') && !user) {
-    return NextResponse.json({ error: 'Connexion requise pour les niveaux pro et expert.' }, { status: 401 })
+  if (!checkRateLimit('u:' + user.id, 20)) {
+    return NextResponse.json({ error: 'Trop de generations. Reessayez dans une heure.' }, { status: 429 })
   }
   const country = normalizeCountry(body.country) ?? user?.country ?? null;
   const isExcel = template.templateType === 'excel';

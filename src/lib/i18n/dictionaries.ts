@@ -27,7 +27,7 @@ const fr = {
       {
         titre: 'Choisissez votre document',
         texte:
-          'Parcourez le catalogue visuel : CV, contrats, statuts, factures… avec aperçu, prix et délai de génération. Sans inscription obligatoire.',
+          'Parcourez le catalogue visuel : CV, contrats, statuts, factures… avec aperçu, prix et délai de génération. Compte gratuit pour générer.',
       },
       {
         titre: 'Répondez au questionnaire IA',

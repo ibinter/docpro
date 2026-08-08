@@ -38,6 +38,8 @@ export default function QuestionnaireForm({
   const [description, setDescription] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
   const [aiNotice, setAiNotice] = useState<string | null>(null);
+  // Relances ciblées de l'assistant sur les informations importantes manquantes
+  const [aiQuestions, setAiQuestions] = useState<string[]>([]);
 
   // Étapes de 3 champs pour un parcours fluide type « ChatDoc ».
   const PER_STEP = 3;
@@ -111,21 +113,37 @@ export default function QuestionnaireForm({
   const analyze = async () => {
     setError(null);
     setAiNotice(null);
+    setAiQuestions([]);
     setAnalyzing(true);
     try {
       const res = await fetch('/api/ai/chatdoc', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: templateCode, description }),
+        // Le pays affine l'extraction (dates, formats, contexte légal).
+        body: JSON.stringify({ code: templateCode, description, country }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "L'analyse a échoué. Réessayez.");
-      setAnswers((a) => ({ ...a, ...(data.answers as Answers) }));
+
+      const remplis = data.answers as Answers;
+      setAnswers((a) => ({ ...a, ...remplis }));
       setMode('form');
-      setStep(0);
-      setAiNotice(
-        `✨ ${data.filled} champ${data.filled > 1 ? 's' : ''} pré-rempli${data.filled > 1 ? 's' : ''} par l'assistant — vérifiez et complétez avant de générer.`
+
+      // Ouvrir directement sur la première étape contenant un champ vide :
+      // l'utilisateur reprend là où il reste du travail, pas au début.
+      const suivant = fields.findIndex(
+        (f) => !String({ ...answers, ...remplis }[f.key] ?? '').trim()
       );
+      setStep(suivant === -1 ? 0 : Math.floor(suivant / PER_STEP));
+
+      const manquants: string[] = Array.isArray(data.missingRequired) ? data.missingRequired : [];
+      setAiNotice(
+        `✨ ${data.filled} champ${data.filled > 1 ? 's' : ''} sur ${data.total} pré-rempli${data.filled > 1 ? 's' : ''} par l'assistant.` +
+          (manquants.length
+            ? ` Il reste à renseigner : ${manquants.slice(0, 4).join(', ')}${manquants.length > 4 ? '…' : ''}.`
+            : ' Vérifiez puis lancez le téléchargement.')
+      );
+      setAiQuestions(Array.isArray(data.questions) ? (data.questions as string[]) : []);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erreur inattendue.');
     } finally {
@@ -223,6 +241,18 @@ export default function QuestionnaireForm({
       ) : (
         <>
           {aiNotice && <div className="alert alert-success">{aiNotice}</div>}
+
+          {aiQuestions.length > 0 && (
+            <div className="alert alert-info" style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <span aria-hidden="true">💬</span>
+              <div>
+                <strong>Pour aller au bout, l’assistant a besoin de :</strong>
+                <ul style={{ margin: '6px 0 0', paddingLeft: 18, lineHeight: 1.7 }}>
+                  {aiQuestions.map((q, i) => <li key={i}>{q}</li>)}
+                </ul>
+              </div>
+            </div>
+          )}
 
           <div className="flex-between mb-2">
             <span className="text-small text-muted">
