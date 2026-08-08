@@ -290,9 +290,13 @@ ${juridique || `Pays cible : ${country ?? "Côte d'Ivoire"} — adapte lois, mon
 DONNÉES DU CLIENT :
 ${provided || '(le client n’a rien précisé — invente un cas professionnel réaliste et cohérent)'}
 
-STRUCTURE ATTENDUE (minimum ${sectionsMin} sections, chacune de ${wordsPerSection} mots RÉELLEMENT rédigés) :
+STRUCTURE ATTENDUE (${sectionsMin} sections${niveau === 'standard' ? ` — ${sectionsMin + 2} au maximum` : ''}, chacune de ${wordsPerSection} mots RÉELLEMENT rédigés) :
 ${structureNiveau.map((s, i) => `${i + 1}. ${s}`).join('\n')}
-Tu peux ajouter des sections pertinentes pour ce modèle précis, jamais en retirer.
+Tu peux ajouter des sections pertinentes pour ce modèle précis, jamais en retirer.${
+    niveau === 'standard'
+      ? `\nNe dépasse pas ${sectionsMin + 2} sections : au-delà, le document serait coupé avant sa fin.`
+      : ''
+  }
 Aucune section ne doit se contenter d'annoncer son objet : chacune énonce des règles concrètes, chiffrées et opposables.
 
 CONSIGNES SPÉCIFIQUES À CE TYPE DE DOCUMENT :
@@ -480,18 +484,52 @@ export async function generateDocumentJson(input: DocGenInput): Promise<DocGenRe
     const Anthropic = (await import('@anthropic-ai/sdk')).default;
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-    const res = await client.messages.create({
-      model,
-      max_tokens: maxTokens,
-      system: [{ type: 'text', text: SYSTEM_PROMPT_JSON, cache_control: { type: 'ephemeral' } }],
-      messages: [{ role: 'user', content: prompt }],
-    });
+    // Une seule tentative laissait le client sans document au moindre incident
+    // (réponse vide, surcharge du service, JSON coupé net). On réessaie, et si
+    // la coupure vient de la limite de tokens on demande des sections plus
+    // resserrées plutôt que de répéter le même échec.
+    const MAX_TENTATIVES = 3;
+    let doc: DocJson | null = null;
+    let usage = { input_tokens: 0, output_tokens: 0 } as {
+      input_tokens: number; output_tokens: number; cache_read_input_tokens?: number;
+    };
+    let dernierMotif = '';
 
-    const raw = res.content[0]?.type === 'text' ? res.content[0].text.trim() : '';
-    const clean = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+    for (let tentative = 1; tentative <= MAX_TENTATIVES && !doc; tentative++) {
+      const tronqueAvant = dernierMotif === 'max_tokens';
+      const consigne = tronqueAvant
+        ? `${prompt}\n\nATTENTION : ta réponse précédente a été coupée avant la fin. Produis le MÊME document mais plus resserré — vise le bas de la fourchette de mots par section — et termine impérativement le JSON.`
+        : prompt;
 
-    let doc: DocJson = parseOrRepair(clean);
-    if (!doc.sections || !Array.isArray(doc.sections) || doc.sections.length === 0) throw new Error('JSON invalide: sections manquantes');
+      const res = await client.messages.create({
+        model,
+        max_tokens: maxTokens,
+        system: [{ type: 'text', text: SYSTEM_PROMPT_JSON, cache_control: { type: 'ephemeral' } }],
+        messages: [{ role: 'user', content: consigne }],
+      });
+
+      dernierMotif = res.stop_reason ?? '';
+      const raw = res.content[0]?.type === 'text' ? res.content[0].text.trim() : '';
+      const clean = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+
+      try {
+        const candidat = parseOrRepair(clean);
+        if (Array.isArray(candidat.sections) && candidat.sections.length > 0) {
+          doc = candidat;
+          usage = res.usage as typeof usage;
+        } else {
+          throw new Error('sections manquantes');
+        }
+      } catch (e) {
+        console.warn(
+          `[DocGen v2] Tentative ${tentative}/${MAX_TENTATIVES} inexploitable ` +
+          `(motif d'arrêt : ${dernierMotif || 'inconnu'}, ${raw.length} caractères reçus) : ` +
+          `${e instanceof Error ? e.message : e}`
+        );
+        if (tentative === MAX_TENTATIVES) throw new Error(`Génération inexploitable après ${MAX_TENTATIVES} tentatives`);
+      }
+    }
+    if (!doc) throw new Error('Génération inexploitable');
 
     // Contrôle qualité post-génération : relecture IA, correction des sections
     // défectueuses, score 0-100. Échec du QC = document original livré tel quel.
@@ -509,7 +547,6 @@ export async function generateDocumentJson(input: DocGenInput): Promise<DocGenRe
       }
     }
 
-    const usage = res.usage as { input_tokens: number; output_tokens: number; cache_read_input_tokens?: number };
     return {
       html: jsonToHtml(doc, famille),
       json: doc,
