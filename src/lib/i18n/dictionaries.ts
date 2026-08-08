@@ -113,7 +113,7 @@ const fr = {
     effacerRecherche: 'Effacer la recherche',
     toutLeCatalogue: 'Tout le catalogue',
     aucunDocumentCategorie: 'Aucun document disponible dans cette catégorie pour le moment.',
-    generer: 'Générer',
+    generer: 'Télécharger',
     categories: {
       rh_emploi: 'RH & Emploi',
       juridique_admin: 'Juridique & Administratif',
@@ -293,7 +293,7 @@ const en: Dict = {
     effacerRecherche: 'Clear search',
     toutLeCatalogue: 'Full catalog',
     aucunDocumentCategorie: 'No document available in this category yet.',
-    generer: 'Generate',
+    generer: 'Download',
     categories: {
       rh_emploi: 'HR & Employment',
       juridique_admin: 'Legal & Administrative',

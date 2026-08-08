@@ -6,10 +6,9 @@ import Link from 'next/link';
 import { unstable_cache } from 'next/cache';
 import SiteHeader from '@/components/SiteHeader';
 import { prisma } from '@/lib/db';
-import { formatFcfa } from '@/lib/pricing';
+import { formatFcfa, DEFAULT_PRICE_GRID } from '@/lib/pricing';
 import { sousCategorieLabel } from '@/lib/subcategories';
 import { getSessionUser } from '@/lib/auth';
-import { formatMoney } from '@/lib/money';
 import { parseFields, prefillFromProfile, splitAnswersJson, type Answers } from '@/lib/docgen';
 import { aiAvailable } from '@/lib/ai/client';
 import { DOCUMENT_COUNTRIES } from '@/lib/ai/countries';
@@ -74,6 +73,11 @@ export default async function QuestionnairePage({
   const template = await prisma.documentTemplate.findUnique({ where: { code } });
   if (!template || !template.active) notFound();
 
+  const VALID_CLASSES: Classe[] = ['A', 'B', 'C'];
+  const classeDoc: Classe = VALID_CLASSES.includes(template.classe as Classe)
+    ? (template.classe as Classe)
+    : 'B';
+
   const [user, similaires] = await Promise.all([
     getSessionUser(),
     getSimilairesCached(template.category, template.subcategory, template.code),
@@ -108,13 +112,13 @@ export default async function QuestionnairePage({
         <p className="text-small text-muted mb-1">
           <Link href="/catalogue">Catalogue</Link> › {template.name}
         </p>
-        <div className="flex-between mb-2">
-          <h1 style={{ fontSize: '1.6rem' }}>{template.name}</h1>
-          <span className="badge badge-gold">{formatMoney(template.price, template.currency)}</span>
-        </div>
+        {/* Aucun badge de prix ici : les trois niveaux affichés juste en dessous
+            font foi. L'ancien badge lisait template.price, un tarif fixe hérité
+            décorrélé de la grille, qui contredisait ces trois prix. */}
+        <h1 style={{ fontSize: '1.6rem' }} className="mb-2">{template.name}</h1>
         {template.description && <p className="text-muted mb-3">{template.description}</p>}
 
-        <NiveauSelectorSection classeDoc={(template.classe as Classe) ?? 'B'} />
+        <NiveauSelectorSection classeDoc={classeDoc} />
 
         {user ? (
           <div className="alert alert-info">
@@ -161,7 +165,7 @@ export default async function QuestionnairePage({
                     </span>
                   )}
                   <span style={{ color: 'var(--cobalt)', fontSize: '.8rem', fontWeight: 600 }}>
-                    Dès {formatFcfa(100)} · Générer →
+                    Télécharger →
                   </span>
                 </Link>
               ))}

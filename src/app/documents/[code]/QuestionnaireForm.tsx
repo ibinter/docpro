@@ -269,7 +269,7 @@ export default function QuestionnaireForm({
             </button>
             {isLast ? (
               <button type="button" className="btn btn-gold btn-lg" onClick={submit} disabled={loading}>
-                {loading ? 'Génération en cours…' : '⚡ Générer mon document'}
+                {loading ? 'Préparation en cours…' : '⬇ Télécharger mon document'}
               </button>
             ) : (
               <button type="button" className="btn btn-primary" onClick={next}>

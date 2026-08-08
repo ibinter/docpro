@@ -68,7 +68,7 @@ export default async function MarketplacePage() {
                 <div className="flex-between" style={{ alignItems: 'center' }}>
                   <strong>{formatMoney(t.price, t.currency)}</strong>
                   <Link href={`/documents/${t.code}`} className="btn btn-primary btn-sm">
-                    Générer ce document
+                    Télécharger ce document
                   </Link>
                 </div>
               </div>
