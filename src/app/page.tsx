@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { formatFcfa, formatUsd, DEFAULT_PRICE_GRID, RECHARGE_TIERS } from '@/lib/pricing';
 import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/public/SiteFooter';
+import SolutionsCarousel from '@/components/public/SolutionsCarousel';
 import CookieBanner from '@/components/CookieBanner';
 import SaraChat from '@/components/SaraChat';
 
@@ -640,10 +641,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ══ 7.27 — CARROUSEL SOLUTIONS IBIG SOFT ══ */}
-      {/* Le conteneur et le script sont dans SiteFooter : la section s'affiche
-          ainsi juste au-dessus du pied de page, sur toutes les pages du site. */}
-
       {/* ══ 7.28 — IBIG PARTNERS ══ */}
       <section style={{
         background: 'linear-gradient(135deg,#0D2B4E 0%,#1a3a6b 100%)',
@@ -793,6 +790,10 @@ export default async function HomePage() {
           </p>
         </div>
       </section>
+
+      {/* ══ CARROUSEL « L'écosystème IBIG Soft » ══
+          Réservé à cette page de vente : il n'apparaît nulle part ailleurs. */}
+      <SolutionsCarousel />
 
       <SiteFooter />
 

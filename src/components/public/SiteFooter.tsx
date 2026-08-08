@@ -1,18 +1,11 @@
 // Footer 6 colonnes — script universel IBIG Soft section 7.32
 import Link from 'next/link';
 import Image from 'next/image';
-import SolutionsCarousel from './SolutionsCarousel';
 
 const ANNEE = new Date().getFullYear();
 
 export default function SiteFooter() {
   return (
-    <>
-    {/* Carrousel « Nos solutions » — le conteneur est ici pour que le script
-        universel l'injecte JUSTE AU-DESSUS du footer. Sans ce conteneur, le
-        script se replie sur la fin du <body> et la section passe sous le pied
-        de page. */}
-    <SolutionsCarousel />
     <footer style={{
       background: '#0D2B4E', color: 'rgba(255,255,255,.7)',
       padding: '48px 0 0', fontSize: '.85rem', lineHeight: 1.9,
@@ -212,6 +205,5 @@ export default function SiteFooter() {
         </div>
       </div>
     </footer>
-    </>
   );
 }
