@@ -151,7 +151,13 @@ const getCategoriePageCached = unstable_cache(
    On garde en cache (5 min) un index léger de tous les modèles actifs avec
    leur texte normalisé, et on filtre en mémoire (~1 Mo, < 10 ms). */
 function normaliser(s: string): string {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  return s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    // Ligatures : pas de décomposition NFD — « œuvre » doit matcher « oeuvre »
+    .replace(/œ/g, 'oe')
+    .replace(/æ/g, 'ae');
 }
 
 const getIndexRechercheCached = unstable_cache(
