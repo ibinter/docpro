@@ -24,7 +24,9 @@ import type { Classe, Niveau } from '../src/lib/pricing';
 
 const OHADA = new Set(['BJ','BF','CM','CF','KM','CG','CI','CD','GA','GN','GW','GQ','ML','NE','SN','TD','TG']);
 
-/** Devises citées à tort selon le pays. */
+/** Devises citées à tort selon le pays.
+ *  XOF et XAF partagent le même libellé « FCFA » : les distinguer par le texte
+ *  est impossible, ils forment donc une seule famille (voir MEME_FAMILLE). */
 const MARQUEURS_DEVISE: Record<string, RegExp> = {
   XOF: /\bFCFA\b|francs? CFA/i,
   XAF: /\bFCFA\b|francs? CFA/i,
@@ -111,8 +113,13 @@ async function main() {
     const bonne = MARQUEURS_DEVISE[attendue].test(texte);
     console.log(`${bonne ? 'OK    ' : 'ALERTE'} devise ${attendue} ${bonne ? 'employée' : 'ABSENTE du document'}`);
   }
+  // XOF et XAF s'écrivent tous deux « FCFA » : un document ivoirien correct
+  // déclencherait une fausse alerte XAF. On ne compare donc qu'entre familles.
+  const MEME_FAMILLE: Record<string, string> = { XOF: 'CFA', XAF: 'CFA' };
+  const familleAttendue = MEME_FAMILLE[attendue] ?? attendue;
   for (const [dev, re] of Object.entries(MARQUEURS_DEVISE)) {
-    if (dev !== attendue && re.test(texte)) {
+    const famille = MEME_FAMILLE[dev] ?? dev;
+    if (famille !== familleAttendue && re.test(texte)) {
       console.log(`ALERTE devise étrangère détectée : ${dev}`);
     }
   }

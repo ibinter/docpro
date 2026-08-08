@@ -170,7 +170,7 @@ export const DROIT_PAYS: Record<string, DroitPays> = {
     nom: 'Maroc',
     devise: 'Dirham marocain (MAD)',
     affaires:
-      "Pays NON membre de l'OHADA : ne jamais citer les Actes uniformes. Droit des affaires régi par le Code de commerce (loi n°15-95) et la loi n°17-95 sur les sociétés anonymes, la loi n°5-96 pour les SARL",
+      "Pays NON membre de l'OHADA : ne jamais citer les Actes uniformes. Code de commerce (loi n°15-95) ; loi n°17-95 sur les sociétés anonymes ; loi n°5-96 pour les SARL, SNC, SCS, SCA et sociétés en participation ; loi n°9-88 relative aux obligations comptables des commerçants",
     travail: 'Code du travail : loi n°65-99 promulguée par le dahir n°1-03-194 du 11 septembre 2003',
     social: 'CNSS (Caisse Nationale de Sécurité Sociale) ; AMO pour la couverture maladie',
     registre: 'Registre du commerce au tribunal de commerce ; identifiant commun de l’entreprise (ICE) ; création via les CRI',

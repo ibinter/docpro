@@ -45,7 +45,20 @@ RÈGLES DE CORRECTION :
 - Ne corrige QUE les sections réellement défectueuses (max 5). Recopie leur texte intégral corrigé.
 - Ne raccourcis jamais une section : corrige en conservant ou enrichissant le contenu.
 - Si le document est bon, "corrections": [] et score >= 85.
-- "issues": [] si aucun problème.`;
+- "issues": [] si aucun problème.
+
+IMPÉRATIF — TOUT PROBLÈME SIGNALÉ DOIT ÊTRE CORRIGÉ, PAS SEULEMENT DÉCRIT.
+N'écris jamais « à vérifier », « vérification recommandée » ou « reformulation
+recommandée » : tu es le dernier relecteur, personne ne repassera derrière toi.
+- Référence légale douteuse ou dont tu n'es pas certain : réécris la phrase SANS
+  le numéro de texte (« conformément à la réglementation comptable en vigueur »
+  plutôt qu'un numéro incertain). Une clause sans référence est acceptable ; une
+  fausse référence ne l'est pas.
+- Contradiction entre deux articles : tranche et réécris les DEUX passages pour
+  qu'ils concordent.
+- Délai, seuil ou majorité non conforme au cadre applicable : remplace par la
+  valeur correcte, ou supprime le chiffre si la règle légale suffit.
+Chaque entrée de "issues" doit avoir sa contrepartie dans "corrections".`;
 
 function clamp(n: unknown, min: number, max: number, fallback: number): number {
   const v = typeof n === 'number' && Number.isFinite(n) ? n : fallback;
