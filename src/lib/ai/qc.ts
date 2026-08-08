@@ -4,6 +4,7 @@
 // autre pays, fautes. Les sections défectueuses sont corrigées, un score 0-100
 // est retourné. En cas d'échec du QC, le document original est livré tel quel.
 import type { DocJson } from './docgen-v2';
+import { contexteJuridique, deviseAttendue } from './legal-countries';
 
 const QC_MODEL = 'claude-haiku-4-5-20251001';
 const QC_MAX_TOKENS = 4000;
@@ -24,9 +25,13 @@ On te donne un document en JSON. Tu l'audites et tu réponds en JSON STRICT, san
 POINTS DE CONTRÔLE :
 1. PLACEHOLDERS : blancs (___), [À compléter], XXX, "à définir", crochets vides — interdits.
 2. COHÉRENCE : dates (fin = début + durée), montants (totaux = somme des lignes, TVA exacte), noms et rôles identiques partout.
-3. RÉFÉRENCES LÉGALES : lois, codes et institutions du PAYS INDIQUÉ uniquement. Une loi française ou d'un autre pays africain dans un document ivoirien est une erreur.
-4. COMPLÉTUDE : aucune section quasi vide (< 40 mots), aucun titre sans contenu.
-5. LANGUE : orthographe, grammaire, typographie française.
+3. RÉFÉRENCES LÉGALES : elles doivent correspondre au cadre juridique fourni ci-dessous. Signale et corrige :
+   - toute loi, tout code ou toute institution d'un AUTRE pays ;
+   - toute référence aux Actes uniformes OHADA dans un pays non membre ;
+   - tout numéro de texte qui ne figure pas dans le cadre fourni et dont la véracité n'est pas certaine — dans ce cas, reformule la clause SANS citer de numéro plutôt que de la laisser.
+4. DEVISE : tous les montants doivent être libellés dans la devise du pays.
+5. COMPLÉTUDE : une section de moins de 120 mots est INCOMPLÈTE — corrige-la en développant réellement son contenu (règles concrètes, chiffres, échéances, conséquences), jamais par du remplissage. Aucun titre sans contenu, aucune section qui se contente d'annoncer son objet.
+6. LANGUE : orthographe, grammaire, typographie française.
 
 RÉPONSE (JSON strict) :
 {
@@ -70,7 +75,11 @@ export async function reviewDocument(doc: DocJson, country: string | null | unde
       system: [{ type: 'text', text: QC_SYSTEM, cache_control: { type: 'ephemeral' } }],
       messages: [{
         role: 'user',
-        content: `Pays du document : ${payload.pays}\n\nAudite ce document et réponds au format demandé :\n${JSON.stringify(payload)}`,
+        content:
+          `Pays du document : ${payload.pays}\n` +
+          (deviseAttendue(country) ? `Devise attendue : ${deviseAttendue(country)}\n` : '') +
+          (contexteJuridique(country) ? `\n${contexteJuridique(country)}\n` : '') +
+          `\nAudite ce document et réponds au format demandé :\n${JSON.stringify(payload)}`,
       }],
     });
 

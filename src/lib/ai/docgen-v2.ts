@@ -6,6 +6,7 @@ import type { TemplateField, Answers } from '@/lib/docgen';
 import { MODEL_BY_NIVEAU, MAX_TOKENS, type Classe, type Niveau } from '@/lib/pricing';
 import { reviewDocument } from './qc';
 import { sectorKnowledge } from './sectors';
+import { contexteJuridique } from './legal-countries';
 
 export interface DocGenInput {
   templateName: string;
@@ -59,9 +60,14 @@ const FAMILLES: Record<Famille, FamilleSpec> = {
     schema: 'contrat.v1',
     avecParties: true,
     structure: [
-      'Préambule', 'Définitions', 'Objet du contrat', 'Durée', 'Obligations des parties',
-      'Conditions financières', 'Résiliation', 'Confidentialité', 'Force majeure',
-      'Règlement des litiges', 'Dispositions finales',
+      'Préambule et exposé préalable', 'Définitions', 'Objet du contrat',
+      'Déclarations et garanties des parties', 'Durée et prise d’effet',
+      'Obligations de la première partie', 'Obligations de la seconde partie',
+      'Conditions financières et modalités de paiement', 'Responsabilité et assurances',
+      'Confidentialité', 'Propriété et cession du contrat', 'Force majeure',
+      'Résiliation et clause résolutoire', 'Règlement des litiges',
+      'Élection de domicile et notifications', 'Formalités et enregistrement',
+      'Dispositions finales',
     ],
     consignes: `- Style juridique précis : chaque article numéroté, phrases affirmatives, zéro ambiguïté.
 - Références légales EXACTES du pays cible : Actes uniformes OHADA applicables (AUDCG pour le commercial, AUSCGIE pour les sociétés, AUS pour les sûretés), Code du travail local pour les contrats de travail, Code civil local pour le droit commun.
@@ -253,31 +259,41 @@ function buildPrompt(input: DocGenInput): string {
     .replace(/\{\{[^}]+\}\}/g, '[donnée client]')
     .replace(/\s+/g, ' ')
     .trim()
-    .slice(0, 900);
+    .slice(0, 2000);
 
-  // Haiku (standard) : budget 8000 tokens. Sonnet/Opus : 20k-64k.
-  const wordsPerSection = niveau === 'standard' ? '110 à 140' : niveau === 'pro' ? '200 à 350' : '300 à 500';
-  const sectionsMin = Math.max(
-    spec.structure.length,
-    niveau === 'standard' ? spec.structure.length : niveau === 'pro' ? spec.structure.length + 2 : spec.structure.length + 4
-  );
+  // Densité par section. Un document trop court n'est pas « conforme mais
+  // léger » : il est incomplet. Budget vérifié : 11 sections × 280 mots
+  // ≈ 4 600 tokens, sous le plafond de 8 000 du niveau standard.
+  const wordsPerSection = niveau === 'standard' ? '200 à 280' : niveau === 'pro' ? '320 à 450' : '500 à 750';
+  // Le niveau Standard couvre le noyau obligatoire (plafond de sortie du modèle
+  // rapide) ; Pro déroule toute la structure ; Expert l'enrichit encore.
+  const structureNiveau =
+    niveau === 'standard' ? spec.structure.slice(0, 12) : spec.structure;
+  const sectionsMin =
+    niveau === 'expert' ? structureNiveau.length + 4
+    : niveau === 'pro' ? structureNiveau.length + 2
+    : structureNiveau.length;
   const niveauDesc = {
     standard: 'complet et professionnel, toutes les rubriques attendues présentes et développées',
     pro: 'très détaillé, personnalisé au secteur du client, avec références précises et sous-parties',
     expert: 'exhaustif, qualité cabinet/notariale, données de marché locales, références réglementaires récentes',
   }[niveau];
 
+  const juridique = contexteJuridique(country) ;
+
   return `Rédige un document professionnel : « ${templateName} » (niveau ${niveau} — ${niveauDesc}).
 ${templateDescription ? `Description du modèle : ${templateDescription}` : ''}
-Pays cible : ${country ?? "Côte d'Ivoire"} — adapte lois, monnaie, institutions et usages à CE pays.
 Type de document : ${famille.replace('_', ' ')}.
+
+${juridique || `Pays cible : ${country ?? "Côte d'Ivoire"} — adapte lois, monnaie, institutions et usages à CE pays.`}
 
 DONNÉES DU CLIENT :
 ${provided || '(le client n’a rien précisé — invente un cas professionnel réaliste et cohérent)'}
 
-STRUCTURE ATTENDUE (minimum ${sectionsMin} sections, chacune de ${wordsPerSection} mots) :
-${spec.structure.map((s, i) => `${i + 1}. ${s}`).join('\n')}
+STRUCTURE ATTENDUE (minimum ${sectionsMin} sections, chacune de ${wordsPerSection} mots RÉELLEMENT rédigés) :
+${structureNiveau.map((s, i) => `${i + 1}. ${s}`).join('\n')}
 Tu peux ajouter des sections pertinentes pour ce modèle précis, jamais en retirer.
+Aucune section ne doit se contenter d'annoncer son objet : chacune énonce des règles concrètes, chiffrées et opposables.
 
 CONSIGNES SPÉCIFIQUES À CE TYPE DE DOCUMENT :
 ${spec.consignes}
@@ -292,7 +308,7 @@ Retourne UNIQUEMENT ce JSON, sans aucun texte avant ou après :
   "titre": "titre exact du document",${spec.avecParties ? `
   "parties": { "Partie 1 (rôle exact)": "identité complète", "Partie 2 (rôle exact)": "identité complète" },` : ''}
   "sections": [
-    { "titre": "${spec.structure[0]}", "contenu": "texte développé de ${wordsPerSection} mots..." }
+    { "titre": "${structureNiveau[0]}", "contenu": "texte développé de ${wordsPerSection} mots..." }
   ],${famille === 'contrat' || famille === 'statuts' ? `
   "clauses_speciales": ["clause complète 1", "clause complète 2"],` : ''}
   "date_creation": "date du jour en toutes lettres",

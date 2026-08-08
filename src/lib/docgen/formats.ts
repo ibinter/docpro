@@ -15,48 +15,206 @@ export function getAvailableFormats(template: DocumentTemplate): DownloadFormat[
   }
 }
 
-/** Génère un Buffer DOCX depuis le HTML du document. */
-export async function generateDocx(
-  doc: Pick<GeneratedDocument, 'title' | 'contentHtml'>,
-  template: Pick<DocumentTemplate, 'name'>
-): Promise<Buffer> {
-  // html-to-docx : convertit HTML → .docx Word
+/** Options de rendu Word : papier en-tête et identité de l'organisation. */
+export interface DocxBranding {
+  displayName: string;
+  /** Image de papier en-tête (PNG/JPEG) reproduite en en-tête de chaque page. */
+  letterhead?: Buffer | null;
+  letterheadMime?: string;
+  primaryColor?: string | null;
+  /** Mentions légales de l'entreprise, en pied de page. */
+  footerText?: string | null;
+}
+
+export interface DocxInput {
+  title: string;
+  contentHtml: string;
+  /** Structure produite par le moteur de génération — source privilégiée. */
+  contentJson?: string | null;
+  templateName: string;
+  createdAt?: Date;
+  verifyCode?: string | null;
+  verifyUrl?: string | null;
+  branding?: DocxBranding | null;
+}
+
+type SectionJson = { titre: string; contenu: string; articles?: { titre: string; texte: string }[] };
+type DocumentJson = {
+  titre?: string;
+  parties?: Record<string, string>;
+  sections?: SectionJson[];
+  clauses_speciales?: string[];
+  date_creation?: string;
+  pays?: string;
+};
+
+/**
+ * Corps Word construit depuis la structure du document plutôt que depuis le
+ * HTML d'affichage : le Word rendu est ainsi typographiquement équivalent au
+ * PDF (mêmes blocs, mêmes titres, même bloc de signatures).
+ */
+function corpsDepuisJson(d: DocumentJson, accent: string): string {
+  const parties = d.parties ? Object.entries(d.parties).filter(([, v]) => typeof v === 'string') : [];
+
+  const enTete = `
+<p class="titre">${escapeHtml(d.titre ?? '')}</p>
+${d.pays ? `<p class="sous-titre">Document établi conformément au droit applicable — ${escapeHtml(d.pays)}</p>` : ''}`;
+
+  const blocParties = parties.length
+    ? `<p class="intitule">ENTRE LES SOUSSIGNÉS :</p>
+<table class="parties"><tbody>
+${parties
+  .map(
+    ([role, identite]) =>
+      `<tr><td class="role">${escapeHtml(role)}</td><td>${escapeHtml(identite)}</td></tr>`
+  )
+  .join('')}
+</tbody></table>`
+    : '';
+
+  const sections = (d.sections ?? [])
+    .map((s) => {
+      const corps = s.articles?.length
+        ? s.articles
+            .map(
+              (a) =>
+                `<p class="article">${escapeHtml(a.titre)}</p><p class="texte">${escapeHtml(a.texte)}</p>`
+            )
+            .join('')
+        : `<p class="texte">${escapeHtml(s.contenu)}</p>`;
+      return `<h2>${escapeHtml(s.titre)}</h2>${corps}`;
+    })
+    .join('');
+
+  const clauses = d.clauses_speciales?.length
+    ? `<h2>Clauses spéciales</h2><ol>${d.clauses_speciales
+        .map((c) => `<li>${escapeHtml(c)}</li>`)
+        .join('')}</ol>`
+    : '';
+
+  // Bloc de signatures sur une nouvelle page, comme dans le PDF.
+  const signatures = parties.length
+    ? `<p class="saut"></p><h2>Signatures des parties</h2>
+<p class="texte">Fait à ${escapeHtml(d.pays ?? '')}, le ${escapeHtml(d.date_creation ?? '')}, en ${
+        parties.length <= 1 ? 'deux' : parties.length
+      } exemplaires originaux, dont un pour chaque partie.</p>
+<table class="signatures"><tbody><tr>
+${parties
+  .slice(0, 2)
+  .map(
+    ([role, identite]) =>
+      `<td><p class="role">${escapeHtml(role)}</p><p class="identite">${escapeHtml(
+        identite
+      )}</p><p class="mention">Lu et approuvé — Bon pour accord</p><p class="ligne">&nbsp;</p></td>`
+  )
+  .join('')}
+</tr></tbody></table>`
+    : '';
+
+  return `${enTete}${blocParties}${sections}${clauses}${signatures}`.replace(
+    /__ACCENT__/g,
+    accent
+  );
+}
+
+/** Génère un Buffer DOCX professionnel (papier en-tête, pagination Word). */
+export async function generateDocx(input: DocxInput): Promise<Buffer> {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const HTMLtoDOCX = require('html-to-docx');
 
+  const accent = input.branding?.primaryColor || '#0D2B4E';
+
+  let structure: DocumentJson | null = null;
+  if (input.contentJson) {
+    try {
+      const parsed = JSON.parse(input.contentJson) as DocumentJson;
+      if (Array.isArray(parsed?.sections) && parsed.sections.length > 0) structure = parsed;
+    } catch {
+      /* structure illisible : repli sur le HTML d'affichage */
+    }
+  }
+
+  const corps = structure
+    ? corpsDepuisJson(structure, accent)
+    : `<h1>${escapeHtml(input.title)}</h1>${input.contentHtml}`;
+
+  const authenticite =
+    input.verifyCode && input.verifyUrl
+      ? `<p class="saut"></p>
+<table class="authent"><tbody><tr><td>
+<p class="authent-titre">Document authentique — vérifiable en ligne</p>
+<p class="authent-texte">Rendez-vous sur ${escapeHtml(input.verifyUrl)}<br/>
+Code de vérification : ${escapeHtml(input.verifyCode)}<br/>
+${
+  input.createdAt
+    ? `Généré le ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(input.createdAt)}`
+    : ''
+}</p>
+</td></tr></tbody></table>`
+      : '';
+
   const fullHtml = `<!DOCTYPE html>
 <html lang="fr">
-<head>
-<meta charset="utf-8"/>
-<title>${escapeHtml(doc.title)}</title>
+<head><meta charset="utf-8"/><title>${escapeHtml(input.title)}</title>
 <style>
-  body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #1a1a1a; margin: 40px; }
-  h1 { font-size: 18pt; color: #0D2B4E; }
-  h2 { font-size: 13pt; color: #1565C0; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
-  table { border-collapse: collapse; width: 100%; }
-  td, th { border: 1px solid #ccc; padding: 6px 10px; font-size: 10pt; }
-  th { background: #E3F2FD; font-weight: bold; }
-  p { line-height: 1.6; margin: 6px 0; }
-  .muted { color: #666; }
-</style>
-</head>
-<body>
-${doc.contentHtml}
-<p style="margin-top:40px; font-size:9pt; color:#999; border-top:1px solid #eee; padding-top:8px;">
-  Document généré par IBIG DocPro — ${template.name}
-</p>
-</body>
-</html>`;
+  body { font-family: 'Times New Roman', Georgia, serif; font-size: 11pt; color: #1a1a1a; }
+  p { line-height: 1.55; margin: 6pt 0; text-align: justify; }
+  .titre { font-family: Calibri, Arial, sans-serif; font-size: 17pt; font-weight: bold; color: ${accent};
+           text-align: center; text-transform: uppercase; margin: 0 0 6pt; }
+  .sous-titre { font-family: Calibri, Arial, sans-serif; font-size: 9pt; color: #546E7A;
+                text-align: center; margin: 0 0 16pt; }
+  h2 { font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: ${accent};
+       text-transform: uppercase; margin: 16pt 0 6pt; border-bottom: 1px solid ${accent}; padding-bottom: 3pt; }
+  .article { font-family: Calibri, Arial, sans-serif; font-weight: bold; font-size: 10.5pt; margin: 10pt 0 3pt; }
+  .texte { text-align: justify; }
+  .intitule { font-family: Calibri, Arial, sans-serif; font-weight: bold; font-size: 10pt; color: ${accent};
+              margin: 14pt 0 4pt; }
+  table.parties { width: 100%; border-collapse: collapse; margin-bottom: 14pt; }
+  table.parties td { border: 1px solid #C8D2DE; padding: 6pt 8pt; font-size: 10pt; vertical-align: top; }
+  table.parties td.role { font-weight: bold; width: 28%; font-family: Calibri, Arial, sans-serif; }
+  ol li { margin-bottom: 6pt; text-align: justify; }
+  .saut { page-break-before: always; }
+  table.signatures { width: 100%; border-collapse: collapse; margin-top: 18pt; }
+  table.signatures td { border: 1px solid #C8D2DE; padding: 10pt; width: 50%; vertical-align: top; }
+  table.signatures .role { font-family: Calibri, Arial, sans-serif; font-weight: bold; color: ${accent};
+                           font-size: 10pt; margin: 0 0 3pt; }
+  table.signatures .identite { font-size: 9pt; color: #546E7A; margin: 0 0 24pt; }
+  table.signatures .mention { font-size: 8.5pt; color: #546E7A; margin: 0 0 6pt; }
+  table.signatures .ligne { border-bottom: 1px solid #333; margin: 24pt 0 0; }
+  table.authent { width: 100%; border-collapse: collapse; margin-top: 20pt; }
+  table.authent td { border: 1px solid #C8D2DE; padding: 10pt; }
+  .authent-titre { font-family: Calibri, Arial, sans-serif; font-weight: bold; font-size: 10pt; color: #0D2B4E; margin: 0 0 4pt; }
+  .authent-texte { font-size: 8.5pt; color: #546E7A; text-align: left; margin: 0; }
+</style></head>
+<body>${corps}${authenticite}</body></html>`;
 
-  const buffer = await HTMLtoDOCX(fullHtml, null, {
+  // En-tête Word : papier en-tête de l'entreprise, répété sur chaque page.
+  const enTeteHtml =
+    input.branding?.letterhead
+      ? `<p style="margin:0"><img src="data:${
+          input.branding.letterheadMime ?? 'image/png'
+        };base64,${input.branding.letterhead.toString('base64')}" width="600" /></p>`
+      : null;
+
+  const piedTexte =
+    input.branding?.footerText?.trim() ||
+    `${input.templateName}${input.verifyCode ? ` · Réf. ${input.verifyCode.slice(-10).toUpperCase()}` : ''}`;
+  const piedHtml = `<p style="font-family:Calibri,Arial,sans-serif;font-size:8pt;color:#546E7A;margin:0">${escapeHtml(
+    piedTexte
+  )}</p>`;
+
+  const buffer = await HTMLtoDOCX(fullHtml, enTeteHtml, {
     orientation: 'portrait',
-    margins: { top: 720, right: 720, bottom: 720, left: 720 },
-    title: doc.title,
-    description: `Document: ${template.name}`,
-    creator: 'IBIG DocPro',
-    font: 'Calibri',
-    fontSize: 22, // half-points = 11pt
-  });
+    margins: { top: enTeteHtml ? 1440 : 1134, right: 1134, bottom: 1134, left: 1134 },
+    title: input.title,
+    description: `Document : ${input.templateName}`,
+    creator: input.branding?.displayName || 'IBIG DocPro',
+    font: 'Times New Roman',
+    fontSize: 22, // demi-points = 11 pt
+    header: Boolean(enTeteHtml),
+    footer: true,
+    pageNumber: true, // pagination Word native, mise à jour à l'impression
+  }, piedHtml);
 
   return Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
 }

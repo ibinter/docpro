@@ -7,7 +7,9 @@ import QRCode from 'qrcode';
 import { prisma } from '@/lib/db';
 import { appUrl } from '@/lib/docgen';
 import { buildDownloadHtml } from '@/lib/docgen/downloadHtml';
+import { generateDocumentPdf } from '@/lib/docgen/document-pdf';
 import { getOrgBranding } from '@/lib/org';
+import { readLetterhead } from '@/lib/letterhead';
 import { generateDocx, generatePptx, type DownloadFormat } from '@/lib/docgen/formats';
 import { parseExcelConfig, generateExcel } from '@/lib/docgen/excel';
 
@@ -83,10 +85,29 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
 
   // ── Format DOCX ────────────────────────────────────────────────────────────
   if (format === 'docx') {
-    const buffer = await generateDocx(
-      { title: link.document.title, contentHtml: link.document.contentHtml },
-      { name: link.document.template.name }
-    );
+    const brandingDocx = link.document.userId ? await getOrgBranding(link.document.userId) : null;
+    const enTete = brandingDocx?.useLetterhead
+      ? await readLetterhead(brandingDocx.letterheadFile)
+      : null;
+
+    const buffer = await generateDocx({
+      title: link.document.title,
+      contentHtml: link.document.contentHtml,
+      contentJson: link.document.contentJson,
+      templateName: link.document.template.name,
+      createdAt: link.document.createdAt,
+      verifyCode: link.document.verifyCode,
+      verifyUrl: `${appUrl()}/verify/${link.document.verifyCode}`,
+      branding: brandingDocx
+        ? {
+            displayName: brandingDocx.displayName,
+            letterhead: enTete,
+            letterheadMime: brandingDocx.letterheadFile?.endsWith('.jpg') ? 'image/jpeg' : 'image/png',
+            primaryColor: brandingDocx.primaryColor,
+            footerText: brandingDocx.footerText,
+          }
+        : null,
+    });
     return new NextResponse(buffer as unknown as BodyInit, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -111,10 +132,50 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
     });
   }
 
-  // ── Format PDF / HTML (défaut) ─────────────────────────────────────────────
   const verifyUrl = `${appUrl()}/verify/${link.document.verifyCode}`;
-  const qrDataUrl = await QRCode.toDataURL(verifyUrl, { margin: 1, width: 220, errorCorrectionLevel: 'M' });
   const branding = link.document.userId ? await getOrgBranding(link.document.userId) : null;
+
+  // ── PDF composé côté serveur ───────────────────────────────────────────────
+  // Pagination réelle (« Page X sur Y »), marges normalisées et papier en-tête
+  // de l'entreprise : impossible à garantir via l'impression du navigateur.
+  if (format === 'pdf') {
+    const letterhead = branding?.useLetterhead
+      ? await readLetterhead(branding.letterheadFile)
+      : null;
+
+    const pdf = await generateDocumentPdf({
+      titre: link.document.title,
+      templateName: link.document.template.name,
+      contentJson: link.document.contentJson,
+      contentHtml: link.document.contentHtml,
+      pays: link.document.country,
+      createdAt: link.document.createdAt,
+      verifyCode: link.document.verifyCode,
+      verifyUrl,
+      watermarkId: link.document.watermarkId,
+      branding: branding
+        ? {
+            displayName: branding.displayName,
+            letterhead,
+            letterheadOnAllPages: branding.letterheadOnAllPages,
+            primaryColor: branding.primaryColor,
+            footerText: branding.footerText,
+          }
+        : null,
+    });
+
+    return new NextResponse(pdf as unknown as BodyInit, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${safeTitle}.pdf"`,
+        'Cache-Control': 'no-store, private',
+        'X-Robots-Tag': 'noindex',
+      },
+    });
+  }
+
+  // ── Aperçu HTML imprimable (format=html) ───────────────────────────────────
+  const qrDataUrl = await QRCode.toDataURL(verifyUrl, { margin: 1, width: 220, errorCorrectionLevel: 'M' });
 
   const html = buildDownloadHtml(
     {

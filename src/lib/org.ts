@@ -11,6 +11,14 @@ export type OrgBranding = {
   displayName: string;
   logoUrl: string | null;
   primaryColor: string | null;
+  /** Papier en-tête : nom du fichier stocké dans private-uploads (jamais une URL publique). */
+  letterheadFile: string | null;
+  /** L'entreprise applique-t-elle son papier en-tête à ses documents ? */
+  useLetterhead: boolean;
+  /** Répéter le bandeau sur toutes les pages (sinon : première page seulement). */
+  letterheadOnAllPages: boolean;
+  /** Mentions légales de l'entreprise, en pied de chaque page. */
+  footerText: string | null;
 };
 
 /** Statuts de licence considérés « actifs » pour l'organisation (couverture). */
@@ -126,7 +134,24 @@ export function parseBranding(brandingJson: string | null | undefined): OrgBrand
     typeof obj.primaryColor === 'string' && HEX_COLOR_RE.test(obj.primaryColor.trim())
       ? obj.primaryColor.trim()
       : null;
-  return { displayName, logoUrl, primaryColor };
+  // Nom de fichier seul : jamais de chemin, pour interdire toute traversée.
+  const letterheadFile =
+    typeof obj.letterheadFile === 'string' && /^[A-Za-z0-9._-]{4,120}$/.test(obj.letterheadFile.trim())
+      ? obj.letterheadFile.trim()
+      : null;
+  const footerText =
+    typeof obj.footerText === 'string' && obj.footerText.trim()
+      ? obj.footerText.trim().slice(0, 200)
+      : null;
+  return {
+    displayName,
+    logoUrl,
+    primaryColor,
+    letterheadFile,
+    useLetterhead: obj.useLetterhead === true && letterheadFile !== null,
+    letterheadOnAllPages: obj.letterheadOnAllPages === true,
+    footerText,
+  };
 }
 
 /**
