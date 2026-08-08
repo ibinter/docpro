@@ -1,9 +1,13 @@
 // Questionnaire « ChatDoc » — formulaire guidé généré depuis fieldsJson.
 // Pré-rempli depuis le Profil Utilisateur Intelligent si connecté (CDC §6.2).
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { unstable_cache } from 'next/cache';
 import SiteHeader from '@/components/SiteHeader';
 import { prisma } from '@/lib/db';
+import { formatFcfa } from '@/lib/pricing';
+import { sousCategorieLabel } from '@/lib/subcategories';
 import { getSessionUser } from '@/lib/auth';
 import { formatMoney } from '@/lib/money';
 import { parseFields, prefillFromProfile, splitAnswersJson, type Answers } from '@/lib/docgen';
@@ -12,6 +16,50 @@ import { DOCUMENT_COUNTRIES } from '@/lib/ai/countries';
 import QuestionnaireForm from './QuestionnaireForm';
 import NiveauSelectorSection from '@/components/NiveauSelectorSection';
 import type { Classe } from '@/lib/pricing';
+
+/** SEO : titre et description propres à chaque fiche document. */
+export async function generateMetadata({ params }: { params: Promise<{ code: string }> }): Promise<Metadata> {
+  const { code } = await params;
+  const t = await prisma.documentTemplate.findUnique({
+    where: { code },
+    select: { name: true, description: true, active: true },
+  });
+  if (!t || !t.active) return { title: 'Document introuvable — IBIG DocPro' };
+  return {
+    title: `${t.name} — modèle à générer en ligne | IBIG DocPro`,
+    description: (t.description ?? `Générez votre ${t.name} conforme aux lois de votre pays en quelques minutes.`).slice(0, 160),
+  };
+}
+
+/** Documents similaires : même sous-catégorie (ou catégorie), en cache 10 min. */
+const getSimilairesCached = unstable_cache(
+  async (category: string, subcategory: string | null, excludeCode: string) => {
+    const where = {
+      active: true,
+      category,
+      code: { not: excludeCode },
+      ...(subcategory && subcategory !== 'autres' ? { subcategory } : {}),
+    };
+    let rows = await prisma.documentTemplate.findMany({
+      where,
+      orderBy: { popularity: 'desc' },
+      take: 6,
+      select: { code: true, name: true, description: true, classe: true },
+    });
+    // Repli sur la catégorie entière si la sous-catégorie est trop pauvre
+    if (rows.length < 3) {
+      rows = await prisma.documentTemplate.findMany({
+        where: { active: true, category, code: { not: excludeCode } },
+        orderBy: { popularity: 'desc' },
+        take: 6,
+        select: { code: true, name: true, description: true, classe: true },
+      });
+    }
+    return rows;
+  },
+  ['fiche-similaires'],
+  { revalidate: 600 }
+);
 
 export default async function QuestionnairePage({
   params,
@@ -26,7 +74,10 @@ export default async function QuestionnairePage({
   const template = await prisma.documentTemplate.findUnique({ where: { code } });
   if (!template || !template.active) notFound();
 
-  const user = await getSessionUser();
+  const [user, similaires] = await Promise.all([
+    getSessionUser(),
+    getSimilairesCached(template.category, template.subcategory, template.code),
+  ]);
   const fields = parseFields(template.fieldsJson);
 
   // Pré-remplissage : profil intelligent, puis réponses existantes si modification.
@@ -85,6 +136,38 @@ export default async function QuestionnairePage({
           countries={DOCUMENT_COUNTRIES}
           defaultCountry={defaultCountry}
         />
+
+        {/* Documents similaires — même sous-catégorie, repli catégorie */}
+        {similaires.length > 0 && (
+          <section className="mt-4">
+            <h2 style={{ fontSize: '1.15rem', marginBottom: 4 }}>Documents similaires</h2>
+            <p className="text-small text-muted mb-2">
+              {template.subcategory && template.subcategory !== 'autres'
+                ? `Autres modèles « ${sousCategorieLabel(template.category, template.subcategory)} »`
+                : 'Dans la même catégorie'}
+              {' — '}
+              <Link href={`/catalogue?categorie=${template.category}${template.subcategory && template.subcategory !== 'autres' ? `&sous=${template.subcategory}` : ''}`}>
+                voir tout →
+              </Link>
+            </p>
+            <div className="grid grid-3">
+              {similaires.map(s => (
+                <Link key={s.code} href={`/documents/${s.code}`} className="card card-hover"
+                  style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ fontWeight: 700, color: 'var(--navy)', fontSize: '.92rem' }}>{s.name}</span>
+                  {s.description && (
+                    <span className="text-small text-muted" style={{ flex: 1 }}>
+                      {s.description.slice(0, 90)}{s.description.length > 90 ? '…' : ''}
+                    </span>
+                  )}
+                  <span style={{ color: 'var(--cobalt)', fontSize: '.8rem', fontWeight: 600 }}>
+                    Dès {formatFcfa(100)} · Générer →
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
     </>
   );
