@@ -21,6 +21,9 @@ const ERR_MESSAGES: Record<string, string> = {
   nom_invalide: 'Le nom affiché doit contenir au moins 2 caractères.',
   logo_invalide: 'L’URL du logo doit commencer par http:// ou https://.',
   couleur_invalide: 'La couleur doit être au format hexadécimal (ex. : #0D2B4E).',
+  entete_invalide:
+    'Papier en-tête refusé : le fichier doit être une image PNG ou JPEG valide de 3 Mo maximum.',
+  entete_echec: 'Le papier en-tête n’a pas pu être enregistré. Réessayez dans un instant.',
 };
 
 export default async function MarquePage({

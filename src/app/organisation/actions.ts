@@ -7,6 +7,7 @@ import { prisma } from '@/lib/db';
 import { audit } from '@/lib/audit';
 import { notifyUser } from '@/lib/notify';
 import { getUserOrg, orgWhiteLabelAllowed, parseBranding } from '@/lib/org';
+import { storeLetterhead, deleteLetterhead, LetterheadError } from '@/lib/letterhead';
 
 function clean(v: FormDataEntryValue | null): string {
   return typeof v === 'string' ? v.trim() : '';
@@ -127,13 +128,41 @@ export async function saveBranding(formData: FormData) {
     redirect('/organisation/marque?erreur=couleur_invalide');
   }
 
+  const before = parseBranding(info.org.brandingJson);
+
+  // ── Papier en-tête ─────────────────────────────────────────────────────
+  // Opt-in : l'entreprise décide si son papier en-tête habille ses documents.
+  const useLetterhead = formData.get('useLetterhead') === 'on';
+  const letterheadOnAllPages = formData.get('letterheadOnAllPages') === 'on';
+  const retirerEnTete = formData.get('removeLetterhead') === 'on';
+  const footerText = clean(formData.get('footerText')).slice(0, 200);
+
+  let letterheadFile = before?.letterheadFile ?? null;
+  const fichier = formData.get('letterhead');
+
+  if (retirerEnTete) {
+    await deleteLetterhead(letterheadFile);
+    letterheadFile = null;
+  } else if (fichier instanceof File && fichier.size > 0) {
+    try {
+      const nouveau = await storeLetterhead(fichier);
+      await deleteLetterhead(letterheadFile); // l'ancien n'a plus lieu d'être
+      letterheadFile = nouveau;
+    } catch (e) {
+      const code = e instanceof LetterheadError ? 'entete_invalide' : 'entete_echec';
+      redirect(`/organisation/marque?erreur=${code}`);
+    }
+  }
+
   const branding = {
     displayName,
     logoUrl: logoUrl || null,
     primaryColor: primaryColor || null,
+    letterheadFile,
+    useLetterhead: useLetterhead && letterheadFile !== null,
+    letterheadOnAllPages,
+    footerText: footerText || null,
   };
-
-  const before = parseBranding(info.org.brandingJson);
   await prisma.organization.update({
     where: { id: info.org.id },
     data: { brandingJson: JSON.stringify(branding) },
@@ -158,6 +187,9 @@ export async function clearBranding() {
   if (!info || info.role !== 'owner') redirect('/organisation?erreur=acces_refuse');
 
   const before = parseBranding(info.org.brandingJson);
+  // Le papier en-tête est un document d'entreprise : il ne doit pas survivre
+  // à la désactivation du White Label.
+  await deleteLetterhead(before?.letterheadFile);
   await prisma.organization.update({
     where: { id: info.org.id },
     data: { brandingJson: null },

@@ -18,6 +18,9 @@ export default function BrandingForm({
   const [displayName, setDisplayName] = useState(initial?.displayName ?? '');
   const [logoUrl, setLogoUrl] = useState(initial?.logoUrl ?? '');
   const [primaryColor, setPrimaryColor] = useState(initial?.primaryColor ?? '#0D2B4E');
+  // Un fichier vient d'être choisi : la case « appliquer » devient activable
+  // avant même l'enregistrement.
+  const [hasFile, setHasFile] = useState(false);
 
   const validColor = HEX_RE.test(primaryColor) ? primaryColor : '#0D2B4E';
   const validLogo = URL_RE.test(logoUrl.trim()) ? logoUrl.trim() : '';
@@ -27,7 +30,8 @@ export default function BrandingForm({
     <div className="grid grid-2">
       <div className="card">
         <div className="card-title">Personnalisation</div>
-        <form action={saveAction}>
+        {/* encType requis : le formulaire transporte le fichier de papier en-tête */}
+        <form action={saveAction} encType="multipart/form-data">
           <div className="field">
             <label className="label" htmlFor="displayName">Nom affiché *</label>
             <input
@@ -72,6 +76,100 @@ export default function BrandingForm({
             </div>
             <p className="form-hint">Utilisée pour le bandeau et les titres de vos documents.</p>
           </div>
+
+          {/* ── Papier en-tête ────────────────────────────────────────── */}
+          <fieldset
+            style={{
+              border: '1px solid #E0E6ED', borderRadius: 10, padding: '14px 16px',
+              margin: '20px 0 0',
+            }}
+          >
+            <legend style={{ padding: '0 8px', fontWeight: 700, fontSize: '.9rem', color: 'var(--navy)' }}>
+              Papier en-tête
+            </legend>
+
+            <p className="text-small text-muted" style={{ marginTop: 4 }}>
+              Téléversez l’image de votre papier en-tête : elle habillera le haut de vos
+              documents PDF et Word. Fichier PNG ou JPEG, 3 Mo maximum. Pour un rendu net,
+              prévoyez une image large (2 000 px environ) et peu haute.
+            </p>
+
+            {initial?.letterheadFile && (
+              <p className="text-small" style={{ color: 'var(--success)', margin: '8px 0' }}>
+                ✓ Un papier en-tête est enregistré. Téléverser un nouveau fichier le remplacera.
+              </p>
+            )}
+
+            <div className="field" style={{ marginTop: 10 }}>
+              <label className="label" htmlFor="letterhead">
+                {initial?.letterheadFile ? 'Remplacer le fichier' : 'Choisir un fichier'}
+              </label>
+              <input
+                className="input"
+                id="letterhead"
+                name="letterhead"
+                type="file"
+                accept="image/png,image/jpeg"
+                onChange={(e) => setHasFile(Boolean(e.target.files?.length))}
+              />
+            </div>
+
+            <label className="flex" style={{ gap: 8, alignItems: 'flex-start', marginTop: 12 }}>
+              <input
+                type="checkbox"
+                name="useLetterhead"
+                defaultChecked={initial?.useLetterhead ?? false}
+                disabled={!initial?.letterheadFile && !hasFile}
+              />
+              <span className="text-small">
+                <strong>Appliquer mon papier en-tête à mes documents</strong>
+                <br />
+                <span className="text-muted">
+                  Décochez pour conserver la présentation standard sans supprimer le fichier.
+                </span>
+              </span>
+            </label>
+
+            <label className="flex" style={{ gap: 8, alignItems: 'flex-start', marginTop: 10 }}>
+              <input
+                type="checkbox"
+                name="letterheadOnAllPages"
+                defaultChecked={initial?.letterheadOnAllPages ?? false}
+              />
+              <span className="text-small">
+                Répéter sur toutes les pages
+                <br />
+                <span className="text-muted">
+                  Sinon, le papier en-tête n’apparaît que sur la première page.
+                </span>
+              </span>
+            </label>
+
+            <div className="field" style={{ marginTop: 14 }}>
+              <label className="label" htmlFor="footerText">Mentions de pied de page</label>
+              <input
+                className="input"
+                id="footerText"
+                name="footerText"
+                maxLength={200}
+                defaultValue={initial?.footerText ?? ''}
+                placeholder="SARL Exemple — RCCM CI-ABJ-2020-B-12345 — Abidjan Cocody — +225 27 22 00 00 00"
+              />
+              <p className="form-hint">
+                Affichées en bas de chaque page, à gauche de la numérotation.
+              </p>
+            </div>
+
+            {initial?.letterheadFile && (
+              <label className="flex" style={{ gap: 8, alignItems: 'center', marginTop: 12 }}>
+                <input type="checkbox" name="removeLetterhead" />
+                <span className="text-small" style={{ color: 'var(--danger)' }}>
+                  Supprimer définitivement le papier en-tête enregistré
+                </span>
+              </label>
+            )}
+          </fieldset>
+
           <div className="flex mt-2">
             <button type="submit" className="btn btn-primary">Enregistrer la marque</button>
           </div>
