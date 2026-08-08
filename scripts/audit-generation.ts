@@ -83,14 +83,31 @@ async function main() {
   const total = sections.reduce((n, s) => n + mots(s.contenu), 0);
   const courtes = sections.filter((s) => mots(s.contenu) < 120);
 
+  // Cible de densité annoncée au modèle selon le niveau.
+  const CIBLE: Record<string, number> = { standard: 200, pro: 320, expert: 500 };
+  const cible = CIBLE[niveau] ?? 200;
+  const sousCible = sections.filter((s) => mots(s.contenu) < cible);
+
   console.log(`Durée            : ${secondes} s (modèle ${res.model})`);
-  console.log(`Score qualité    : ${res.qcScore ?? 'non évalué'}/100${res.qcCorrected ? ' (sections corrigées)' : ''}`);
+  console.log(`Score qualité    : ${res.qcScore ?? 'non évalué'}/100`);
+  console.log(
+    `Contrôle qualité : ${res.qcIssues.length} problème(s) signalé(s), ` +
+    `${res.qcApplied} correction(s) appliquée(s)` +
+    `${res.qcRejected ? `, ${res.qcRejected} rejetée(s)` : ''}`
+  );
+  if (res.qcIssues.length > res.qcApplied) {
+    console.log(`ALERTE ${res.qcIssues.length - res.qcApplied} problème(s) signalé(s) mais NON corrigé(s) — livrés au client`);
+  }
   if (res.qcIssues.length) console.log(`Problèmes relevés: ${res.qcIssues.join(' | ')}`);
   console.log(`Sections         : ${sections.length}`);
-  console.log(`Mots au total    : ${total}`);
-  console.log(`Sections < 120 mots : ${courtes.length}${courtes.length ? ' → ' + courtes.map((s) => s.titre).join(', ') : ''}`);
+  console.log(`Mots au total    : ${total} (moyenne ${Math.round(total / sections.length)} par section)`);
+  console.log(`${sousCible.length ? 'ALERTE' : 'OK    '} densité : ${sousCible.length}/${sections.length} section(s) sous la cible de ${cible} mots`);
+  console.log(`${courtes.length ? 'ALERTE' : 'OK    '} plancher : ${courtes.length} section(s) sous 120 mots`);
   console.log('\nDétail des sections :');
-  for (const s of sections) console.log(`  ${String(mots(s.contenu)).padStart(4)} mots  ${s.titre}`);
+  for (const s of sections) {
+    const n = mots(s.contenu);
+    console.log(`  ${n < cible ? '·' : ' '} ${String(n).padStart(4)} mots  ${s.titre}`);
+  }
 
   // ── Conformité au pays ───────────────────────────────────────────────
   const texte = [

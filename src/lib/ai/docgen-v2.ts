@@ -297,7 +297,9 @@ Tu peux ajouter des sections pertinentes pour ce modèle précis, jamais en reti
       ? `\nNe dépasse pas ${sectionsMin + 2} sections : au-delà, le document serait coupé avant sa fin.`
       : ''
   }
-Aucune section ne doit se contenter d'annoncer son objet : chacune énonce des règles concrètes, chiffrées et opposables.
+DENSITÉ — EXIGENCE FERME : ${wordsPerSection.split(' à ')[0]} mots est un PLANCHER, pas une moyenne. Une section plus courte est considérée comme incomplète et sera rejetée.
+Aucune section ne doit se contenter d'annoncer son objet : chacune énonce des règles concrètes, chiffrées et opposables — conditions de mise en œuvre, délais, seuils, conséquences en cas de manquement.
+Vérifie chaque nombre écrit en toutes lettres avant de répondre (« quatre-vingt-dix-neuf », jamais « quarante-neuf-dix-neuf ») : une erreur à cet endroit décrédibilise tout le document.
 
 CONSIGNES SPÉCIFIQUES À CE TYPE DE DOCUMENT :
 ${spec.consignes}
@@ -440,6 +442,9 @@ export interface DocGenResult {
   qcScore: number | null;
   qcIssues: string[];
   qcCorrected: boolean;
+  /** Corrections réellement appliquées / rejetées par le garde-fou. */
+  qcApplied: number;
+  qcRejected: number;
 }
 
 /**
@@ -536,14 +541,30 @@ export async function generateDocumentJson(input: DocGenInput): Promise<DocGenRe
     let qcScore: number | null = null;
     let qcIssues: string[] = [];
     let qcCorrected = false;
+    let qcApplied = 0;
+    let qcRejected = 0;
     const qc = await reviewDocument(doc, input.country);
     if (qc) {
       qcScore = qc.score;
       qcIssues = qc.issues;
       qcCorrected = qc.corrected;
+      qcApplied = qc.correctionsApplied;
+      qcRejected = qc.correctionsRejected;
       if (qc.corrected) doc = qc.doc;
       if (qc.issues.length > 0) {
-        console.log(`[QC] ${input.templateName} — score ${qc.score}/100, ${qc.issues.length} problème(s)${qc.corrected ? ', sections corrigées' : ''}:`, qc.issues.join(' | '));
+        console.log(
+          `[QC] ${input.templateName} — score ${qc.score}/100, ` +
+          `${qc.issues.length} problème(s), ${qc.correctionsApplied} correction(s) appliquée(s)` +
+          `${qc.correctionsRejected ? `, ${qc.correctionsRejected} rejetée(s)` : ''} :`,
+          qc.issues.join(' | ')
+        );
+        // Un problème signalé sans correction est un défaut livré au client.
+        if (qc.correctionsApplied < qc.issues.length) {
+          console.warn(
+            `[QC] ATTENTION : ${qc.issues.length - qc.correctionsApplied} problème(s) signalé(s) ` +
+            `mais NON corrigé(s) — le document part avec.`
+          );
+        }
       }
     }
 
@@ -558,6 +579,8 @@ export async function generateDocumentJson(input: DocGenInput): Promise<DocGenRe
       qcScore,
       qcIssues,
       qcCorrected,
+      qcApplied,
+      qcRejected,
     };
   } catch (err) {
     console.error('[DocGen v2] Erreur:', err);

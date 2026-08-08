@@ -14,6 +14,11 @@ export interface QcResult {
   issues: string[];         // problèmes détectés (journalisés, non montrés au client)
   doc: DocJson;             // document éventuellement corrigé
   corrected: boolean;       // des sections ont-elles été réécrites ?
+  /** Nombre de corrections réellement appliquées — à comparer au nombre de
+   *  problèmes signalés : un écart révèle un relecteur qui décrit sans agir. */
+  correctionsApplied: number;
+  /** Corrections proposées mais rejetées par le garde-fou anti-appauvrissement. */
+  correctionsRejected: number;
   durationMs: number;
   tokensIn: number;
   tokensOut: number;
@@ -30,8 +35,9 @@ POINTS DE CONTRÔLE :
    - toute référence aux Actes uniformes OHADA dans un pays non membre ;
    - tout numéro de texte qui ne figure pas dans le cadre fourni et dont la véracité n'est pas certaine — dans ce cas, reformule la clause SANS citer de numéro plutôt que de la laisser.
 4. DEVISE : tous les montants doivent être libellés dans la devise du pays.
-5. COMPLÉTUDE : une section de moins de 120 mots est INCOMPLÈTE — corrige-la en développant réellement son contenu (règles concrètes, chiffres, échéances, conséquences), jamais par du remplissage. Aucun titre sans contenu, aucune section qui se contente d'annoncer son objet.
-6. LANGUE : orthographe, grammaire, typographie française.
+5. COMPLÉTUDE : une section de moins de 180 mots est INCOMPLÈTE — corrige-la en développant réellement son contenu (règles concrètes, chiffres, échéances, conséquences, conditions de mise en œuvre), jamais par du remplissage ni par des redites. Aucun titre sans contenu, aucune section qui se contente d'annoncer son objet.
+6. NOMBRES ÉCRITS EN TOUTES LETTRES : vérifie chaque montant, durée et quantité écrit en lettres (« quatre-vingt-dix-neuf », « quatre cent mille »). Une erreur de composition à cet endroit décrédibilise tout le document.
+7. LANGUE : orthographe, grammaire, typographie française.
 
 RÉPONSE (JSON strict) :
 {
@@ -106,17 +112,23 @@ export async function reviewDocument(doc: DocJson, country: string | null | unde
     };
 
     // Application des corrections valides
-    let corrected = false;
+    let correctionsApplied = 0;
+    let correctionsRejected = 0;
     const sections = doc.sections.map(s => ({ ...s }));
     for (const c of verdict.corrections ?? []) {
       const i = typeof c.index === 'number' ? c.index : -1;
       const texte = typeof c.contenu === 'string' ? c.contenu.trim() : '';
+      if (i < 0 || i >= sections.length || !texte) { correctionsRejected++; continue; }
       // Garde-fou : jamais remplacer par un texte 2× plus court (le QC ne doit pas appauvrir)
-      if (i >= 0 && i < sections.length && texte.length >= sections[i].contenu.length / 2) {
-        sections[i] = { ...sections[i], contenu: texte, articles: undefined };
-        corrected = true;
+      if (texte.length < sections[i].contenu.length / 2) {
+        correctionsRejected++;
+        console.warn(`[QC] correction rejetée (section « ${sections[i].titre} » serait amputée)`);
+        continue;
       }
+      sections[i] = { ...sections[i], contenu: texte, articles: undefined };
+      correctionsApplied++;
     }
+    const corrected = correctionsApplied > 0;
 
     const usage = res.usage as { input_tokens: number; output_tokens: number };
     return {
@@ -124,6 +136,8 @@ export async function reviewDocument(doc: DocJson, country: string | null | unde
       issues: (verdict.issues ?? []).filter((x): x is string => typeof x === 'string').slice(0, 20),
       doc: { ...doc, sections },
       corrected,
+      correctionsApplied,
+      correctionsRejected,
       durationMs: Date.now() - t0,
       tokensIn: usage.input_tokens ?? 0,
       tokensOut: usage.output_tokens ?? 0,
