@@ -640,9 +640,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ══ 7.27 — CARROUSEL SOLUTIONS IBIG SOFT (script universel) ══ */}
-      {/* Le script /assets/js/ibigsoft-universal.js injecte ici le carrousel dynamique */}
-      <div data-ibig="solutions" />
+      {/* ══ 7.27 — CARROUSEL SOLUTIONS IBIG SOFT ══ */}
+      {/* Le conteneur et le script sont dans SiteFooter : la section s'affiche
+          ainsi juste au-dessus du pied de page, sur toutes les pages du site. */}
 
       {/* ══ 7.28 — IBIG PARTNERS ══ */}
       <section style={{
