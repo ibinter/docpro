@@ -146,6 +146,31 @@ const getCategoriePageCached = unstable_cache(
   { revalidate: 60 }
 );
 
+/* Recherche insensible aux accents et à la casse : le `contains` SQLite est
+   sensible aux accents (« faisabilite » ne trouvait pas « Faisabilité »).
+   On garde en cache (5 min) un index léger de tous les modèles actifs avec
+   leur texte normalisé, et on filtre en mémoire (~1 Mo, < 10 ms). */
+function normaliser(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+
+const getIndexRechercheCached = unstable_cache(
+  async () => {
+    const rows = await prisma.documentTemplate.findMany({
+      where: { active: true },
+      orderBy: [{ popularity: 'desc' }, { name: 'asc' }],
+      select: { id: true, name: true, description: true, category: true },
+    });
+    return rows.map(r => ({
+      id: r.id,
+      category: r.category,
+      texte: normaliser(`${r.name} ${r.description ?? ''} ${r.category}`),
+    }));
+  },
+  ['catalogue-index-recherche'],
+  { revalidate: 300 }
+);
+
 export default async function CataloguePage({
   searchParams,
 }: {
@@ -156,20 +181,6 @@ export default async function CataloguePage({
   const filtre = categorie && CATEGORY_CODES.includes(categorie) ? categorie : null;
   const recherche = (q ?? '').trim().slice(0, 100);
   const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1);
-
-  const where = {
-    active: true,
-    ...(filtre ? { category: filtre } : {}),
-    ...(recherche
-      ? {
-          OR: [
-            { name: { contains: recherche } },
-            { description: { contains: recherche } },
-            { category: { contains: recherche } },
-          ],
-        }
-      : {}),
-  };
 
   const modeAper\u00e7u = !filtre && !recherche;
 
@@ -193,17 +204,22 @@ export default async function CataloguePage({
       // Vue cat\u00e9gorie sans recherche : cache 60 s par (cat\u00e9gorie, page).
       ({ total, templates } = await getCategoriePageCached(filtre, page));
     } else {
-      // Recherche libre : en direct (cl\u00e9s de cache illimit\u00e9es, requ\u00eate d\u00e9j\u00e0 < 1 s).
-      [total, templates] = await Promise.all([
-        prisma.documentTemplate.count({ where }),
-        prisma.documentTemplate.findMany({
-          where,
-          orderBy: [{ popularity: 'desc' }, { name: 'asc' }],
-          skip: (page - 1) * PAR_PAGE,
-          take: PAR_PAGE,
-          select: CARD_SELECT,
-        }),
-      ]);
+      // Recherche insensible aux accents : filtrage en m\u00e9moire sur l'index normalis\u00e9.
+      // Tous les mots de la requ\u00eate doivent appara\u00eetre (ET logique).
+      const index = await getIndexRechercheCached();
+      const termes = normaliser(recherche).split(/\s+/).filter(Boolean);
+      const matches = index.filter(r =>
+        (!filtre || r.category === filtre) && termes.every(t => r.texte.includes(t))
+      );
+      total = matches.length;
+      const pageIds = matches.slice((page - 1) * PAR_PAGE, page * PAR_PAGE).map(m => m.id);
+      const rows = await prisma.documentTemplate.findMany({
+        where: { id: { in: pageIds } },
+        select: CARD_SELECT,
+      });
+      // Conserver l'ordre de pertinence (popularit\u00e9) de l'index
+      const parId = new Map(rows.map(r => [r.id, r]));
+      templates = pageIds.map(id => parId.get(id)).filter(Boolean) as unknown as CardTemplate[];
     }
     totalPages = Math.max(1, Math.ceil(total / PAR_PAGE));
     for (const tpl of templates) {
