@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db';
 import { formatFcfa, formatUsd, DEFAULT_PRICE_GRID, type Classe } from '@/lib/pricing';
 import { getDict } from '@/lib/i18n';
 import SiteHeader from '@/components/SiteHeader';
+import { SOUS_CATEGORIES, AUTRES } from '@/lib/subcategories';
 import SiteFooter from '@/components/public/SiteFooter';
 import AddToCartButton from '@/components/AddToCartButton';
 
@@ -70,13 +71,22 @@ function ClasseBadge({ classe }: { classe: string | null }) {
   );
 }
 
-function catalogueUrl(categorie: string | null, q: string, page?: number): string {
+function catalogueUrl(categorie: string | null, q: string, page?: number, sous?: string | null): string {
   const params = new URLSearchParams();
   if (categorie) params.set('categorie', categorie);
+  if (sous && categorie) params.set('sous', sous);
   if (q) params.set('q', q);
   if (page && page > 1) params.set('page', String(page));
   const qs = params.toString();
   return qs ? `/catalogue?${qs}` : '/catalogue';
+}
+
+function catalogueUrlSous(categorie: string, sous: string | null, q: string): string {
+  const params = new URLSearchParams();
+  params.set('categorie', categorie);
+  if (sous) params.set('sous', sous);
+  if (q) params.set('q', q);
+  return `/catalogue?${params.toString()}`;
 }
 
 /* Performance : ne jamais charger les 12 800+ mod\u00e8les d'un coup.
@@ -128,9 +138,9 @@ const getApercuCached = unstable_cache(
 );
 
 const getCategoriePageCached = unstable_cache(
-  async (category: string, page: number) => {
-    const where = { active: true, category };
-    const [total, templates] = await Promise.all([
+  async (category: string, page: number, sous: string | null) => {
+    const where = { active: true, category, ...(sous ? { subcategory: sous } : {}) };
+    const [total, templates, sousCounts] = await Promise.all([
       prisma.documentTemplate.count({ where }),
       prisma.documentTemplate.findMany({
         where,
@@ -139,8 +149,14 @@ const getCategoriePageCached = unstable_cache(
         take: PAR_PAGE,
         select: CARD_SELECT,
       }),
+      // Compteurs par sous-catégorie (toujours sur toute la catégorie, pour les puces)
+      prisma.documentTemplate.groupBy({
+        by: ['subcategory'],
+        where: { active: true, category },
+        _count: { id: true },
+      }),
     ]);
-    return { total, templates };
+    return { total, templates, sousCounts };
   },
   ['catalogue-categorie'],
   { revalidate: 60 }
@@ -180,13 +196,16 @@ const getIndexRechercheCached = unstable_cache(
 export default async function CataloguePage({
   searchParams,
 }: {
-  searchParams: Promise<{ categorie?: string; q?: string; page?: string }>;
+  searchParams: Promise<{ categorie?: string; q?: string; page?: string; sous?: string }>;
 }) {
-  const [{ t }, { categorie, q, page: pageParam }] = await Promise.all([getDict(), searchParams]);
+  const [{ t }, { categorie, q, page: pageParam, sous: sousParam }] = await Promise.all([getDict(), searchParams]);
   const CATEGORIES = t.catalogue.categories;
   const filtre = categorie && CATEGORY_CODES.includes(categorie) ? categorie : null;
   const recherche = (q ?? '').trim().slice(0, 100);
   const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1);
+  // Sous-cat\u00e9gorie valide uniquement dans le contexte de sa cat\u00e9gorie
+  const sous = filtre && sousParam && (sousParam === AUTRES.code || SOUS_CATEGORIES[filtre]?.some(s => s.code === sousParam))
+    ? sousParam : null;
 
   const modeAper\u00e7u = !filtre && !recherche;
 
@@ -195,6 +214,7 @@ export default async function CataloguePage({
   let totalPages = 1;
   const parCategorie = new Map<string, CardTemplate[]>();
   const countByCat = new Map<string, number>();
+  let sousCounts: { subcategory: string | null; _count: { id: number } }[] = [];
 
   if (modeAper\u00e7u) {
     // Aper\u00e7u servi depuis le cache (60 s) \u2014 une seule entr\u00e9e pour tous les visiteurs.
@@ -207,8 +227,8 @@ export default async function CataloguePage({
     templates = tops.flat();
   } else {
     if (filtre && !recherche) {
-      // Vue cat\u00e9gorie sans recherche : cache 60 s par (cat\u00e9gorie, page).
-      ({ total, templates } = await getCategoriePageCached(filtre, page));
+      // Vue cat\u00e9gorie sans recherche : cache 60 s par (cat\u00e9gorie, page, sous-cat\u00e9gorie).
+      ({ total, templates, sousCounts } = await getCategoriePageCached(filtre, page, sous));
     } else {
       // Recherche insensible aux accents : filtrage en m\u00e9moire sur l'index normalis\u00e9.
       // Tous les mots de la requ\u00eate doivent appara\u00eetre (ET logique).
@@ -312,7 +332,7 @@ export default async function CataloguePage({
         </p>
 
         {/* Filtres catégorie */}
-        <div className="flex mb-3" style={{ flexWrap: 'wrap', gap: 8 }}>
+        <div className="flex mb-2" style={{ flexWrap: 'wrap', gap: 8 }}>
           <Link href={catalogueUrl(null, recherche)} className={`btn btn-sm ${!filtre ? 'btn-primary' : 'btn-outline'}`}>
             {t.catalogue.toutesCategories}
           </Link>
@@ -326,6 +346,36 @@ export default async function CataloguePage({
             </Link>
           ))}
         </div>
+
+        {/* Sous-catégories de la catégorie sélectionnée */}
+        {filtre && !recherche && sousCounts.length > 0 && (
+          <div className="flex mb-3" style={{ flexWrap: 'wrap', gap: 6, paddingLeft: 4, borderLeft: '3px solid var(--gold)' }}>
+            <Link
+              href={catalogueUrlSous(filtre, null, recherche)}
+              style={{
+                padding: '4px 12px', borderRadius: 14, fontSize: '.78rem', fontWeight: 600, textDecoration: 'none',
+                background: !sous ? 'var(--navy)' : '#eef2f7', color: !sous ? '#fff' : '#456',
+              }}
+            >
+              Toutes
+            </Link>
+            {[...(SOUS_CATEGORIES[filtre] ?? []), AUTRES]
+              .map(sc => ({ ...sc, n: sousCounts.find(c => c.subcategory === sc.code)?._count.id ?? 0 }))
+              .filter(sc => sc.n > 0)
+              .map(sc => (
+                <Link
+                  key={sc.code}
+                  href={catalogueUrlSous(filtre, sc.code === sous ? null : sc.code, recherche)}
+                  style={{
+                    padding: '4px 12px', borderRadius: 14, fontSize: '.78rem', fontWeight: 600, textDecoration: 'none',
+                    background: sous === sc.code ? 'var(--navy)' : '#eef2f7', color: sous === sc.code ? '#fff' : '#456',
+                  }}
+                >
+                  {sc.label} <span style={{ opacity: .65 }}>({sc.n})</span>
+                </Link>
+              ))}
+          </div>
+        )}
 
         {/* État vide */}
         {templates.length === 0 && (
@@ -399,7 +449,7 @@ export default async function CataloguePage({
         {!modeAperçu && totalPages > 1 && (
           <nav aria-label="Pagination" className="flex mb-3" style={{ justifyContent: 'center', flexWrap: 'wrap', gap: 8 }}>
             {page > 1 && (
-              <Link href={catalogueUrl(filtre, recherche, page - 1)} className="btn btn-outline btn-sm">
+              <Link href={catalogueUrl(filtre, recherche, page - 1, sous)} className="btn btn-outline btn-sm">
                 ← Précédent
               </Link>
             )}
@@ -409,7 +459,7 @@ export default async function CataloguePage({
               ) : (
                 <Link
                   key={p}
-                  href={catalogueUrl(filtre, recherche, p)}
+                  href={catalogueUrl(filtre, recherche, p, sous)}
                   className={`btn btn-sm ${p === page ? 'btn-primary' : 'btn-outline'}`}
                   aria-current={p === page ? 'page' : undefined}
                 >
@@ -418,7 +468,7 @@ export default async function CataloguePage({
               )
             )}
             {page < totalPages && (
-              <Link href={catalogueUrl(filtre, recherche, page + 1)} className="btn btn-outline btn-sm">
+              <Link href={catalogueUrl(filtre, recherche, page + 1, sous)} className="btn btn-outline btn-sm">
                 Suivant →
               </Link>
             )}

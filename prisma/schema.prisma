@@ -345,6 +345,7 @@ model DocumentTemplate {
   code          String   @unique // cv_pro, lettre_motivation, bail_residentiel…
   name          String
   category      String // rh_emploi | juridique_admin | commercial_financier | academique | sante | immobilier | association
+  subcategory   String? // sous-catégorie de recherche (voir src/lib/subcategories.ts)
   description   String?
   price         Int // FCFA
   priceMax      Int?
@@ -368,6 +369,8 @@ model DocumentTemplate {
 
   documents GeneratedDocument[]
   cartItems CartItem[]
+
+  @@index([category, subcategory])
 }
 
 model GeneratedDocument {
