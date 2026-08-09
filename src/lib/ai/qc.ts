@@ -35,8 +35,8 @@ POINTS DE CONTRÔLE :
    - toute référence aux Actes uniformes OHADA dans un pays non membre ;
    - tout numéro de texte qui ne figure pas dans le cadre fourni et dont la véracité n'est pas certaine — dans ce cas, reformule la clause SANS citer de numéro plutôt que de la laisser.
 4. DEVISE : tous les montants doivent être libellés dans la devise du pays.
-5. COMPLÉTUDE : une section de moins de 180 mots est INCOMPLÈTE — corrige-la en développant réellement son contenu (règles concrètes, chiffres, échéances, conséquences, conditions de mise en œuvre), jamais par du remplissage ni par des redites. Aucun titre sans contenu, aucune section qui se contente d'annoncer son objet.
-6. NOMBRES ÉCRITS EN TOUTES LETTRES : vérifie chaque montant, durée et quantité écrit en lettres (« quatre-vingt-dix-neuf », « quatre cent mille »). Une erreur de composition à cet endroit décrédibilise tout le document.
+5. COMPLÉTUDE : juge chaque section sur son contenu, pas sur sa longueur. Une rubrique brève par nature (dénomination, siège, durée) peut tenir en 120 mots. En revanche, une rubrique de fond — capital et apports, gérance, décisions collectives, obligations, résiliation, litiges — qui n'énonce ni seuil, ni délai, ni majorité, ni conséquence en cas de manquement est INCOMPLÈTE : développe-la réellement, jamais par du remplissage ni des redites.
+6. NOMBRES ET MONTANTS : vérifie chaque nombre écrit en toutes lettres (« quatre-vingt-dix-neuf », « quatre cent mille »). Vérifie aussi que TOUT montant porte sa devise — un capital social sans devise est une omission grave.
 7. LANGUE : orthographe, grammaire, typographie française.
 
 RÉPONSE (JSON strict) :

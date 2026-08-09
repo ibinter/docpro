@@ -30,10 +30,10 @@ const OHADA = new Set(['BJ','BF','CM','CF','KM','CG','CI','CD','GA','GN','GW','G
 const MARQUEURS_DEVISE: Record<string, RegExp> = {
   XOF: /\bFCFA\b|francs? CFA/i,
   XAF: /\bFCFA\b|francs? CFA/i,
-  MAD: /\bdirhams?\b|\bMAD\b/i,
-  DZD: /\bdinars? alg/i,
-  TND: /\bdinars? tunisien/i,
-  EUR: /\beuros?\b|€/i,
+  MAD: /\bdirhams?\b|\bMAD\b|\bDH\b/i,
+  DZD: /\bdinars? alg|\bDZD\b/i,
+  TND: /\bdinars? tunisien|\bTND\b/i,
+  EUR: /\beuros?\b|€|\bEUR\b/i,
   GNF: /francs? guin|\bGNF\b/i,
   CDF: /francs? congolais|\bCDF\b/i,
   CHF: /francs? suisses?|\bCHF\b/i,
@@ -83,10 +83,10 @@ async function main() {
   const total = sections.reduce((n, s) => n + mots(s.contenu), 0);
   const courtes = sections.filter((s) => mots(s.contenu) < 120);
 
-  // Cible de densité annoncée au modèle selon le niveau.
-  const CIBLE: Record<string, number> = { standard: 200, pro: 320, expert: 500 };
-  const cible = CIBLE[niveau] ?? 200;
-  const sousCible = sections.filter((s) => mots(s.contenu) < cible);
+  // Le volume TOTAL fait foi : imposer un quota uniforme par section
+  // produirait du remplissage sur les rubriques brèves par nature.
+  const MOTS_MOYENS: Record<string, number> = { standard: 230, pro: 380, expert: 600 };
+  const totalVise = sections.length * (MOTS_MOYENS[niveau] ?? 230);
 
   console.log(`Durée            : ${secondes} s (modèle ${res.model})`);
   console.log(`Score qualité    : ${res.qcScore ?? 'non évalué'}/100`);
@@ -99,14 +99,15 @@ async function main() {
     console.log(`ALERTE ${res.qcIssues.length - res.qcApplied} problème(s) signalé(s) mais NON corrigé(s) — livrés au client`);
   }
   if (res.qcIssues.length) console.log(`Problèmes relevés: ${res.qcIssues.join(' | ')}`);
+  const atteint = Math.round((total / totalVise) * 100);
   console.log(`Sections         : ${sections.length}`);
   console.log(`Mots au total    : ${total} (moyenne ${Math.round(total / sections.length)} par section)`);
-  console.log(`${sousCible.length ? 'ALERTE' : 'OK    '} densité : ${sousCible.length}/${sections.length} section(s) sous la cible de ${cible} mots`);
+  console.log(`${atteint >= 85 ? 'OK    ' : 'ALERTE'} volume : ${atteint} % de la cible (${totalVise} mots)`);
   console.log(`${courtes.length ? 'ALERTE' : 'OK    '} plancher : ${courtes.length} section(s) sous 120 mots`);
   console.log('\nDétail des sections :');
   for (const s of sections) {
     const n = mots(s.contenu);
-    console.log(`  ${n < cible ? '·' : ' '} ${String(n).padStart(4)} mots  ${s.titre}`);
+    console.log(`  ${n < 120 ? '!' : ' '} ${String(n).padStart(4)} mots  ${s.titre}`);
   }
 
   // ── Conformité au pays ───────────────────────────────────────────────

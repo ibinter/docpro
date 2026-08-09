@@ -264,6 +264,9 @@ function buildPrompt(input: DocGenInput): string {
   // Densité par section. Un document trop court n'est pas « conforme mais
   // léger » : il est incomplet. Budget vérifié : 11 sections × 280 mots
   // ≈ 4 600 tokens, sous le plafond de 8 000 du niveau standard.
+  // Une exigence UNIFORME par section produit du remplissage : « Dénomination
+  // sociale » ne peut pas faire 250 mots utiles. On vise donc un volume TOTAL,
+  // que le modèle répartit selon le poids réel de chaque rubrique.
   const wordsPerSection = niveau === 'standard' ? '200 à 280' : niveau === 'pro' ? '320 à 450' : '500 à 750';
   // Le niveau Standard couvre le noyau obligatoire (plafond de sortie du modèle
   // rapide) ; Pro déroule toute la structure ; Expert l'enrichit encore.
@@ -273,6 +276,10 @@ function buildPrompt(input: DocGenInput): string {
     niveau === 'expert' ? structureNiveau.length + 4
     : niveau === 'pro' ? structureNiveau.length + 2
     : structureNiveau.length;
+
+  // Volume total visé — c'est lui qui fait foi, pas un quota par section.
+  const MOTS_MOYENS = niveau === 'standard' ? 230 : niveau === 'pro' ? 380 : 600;
+  const totalVise = `${Math.round((sectionsMin * MOTS_MOYENS) / 100) * 100} à ${Math.round((sectionsMin * MOTS_MOYENS * 1.3) / 100) * 100}`;
   const niveauDesc = {
     standard: 'complet et professionnel, toutes les rubriques attendues présentes et développées',
     pro: 'très détaillé, personnalisé au secteur du client, avec références précises et sous-parties',
@@ -297,8 +304,12 @@ Tu peux ajouter des sections pertinentes pour ce modèle précis, jamais en reti
       ? `\nNe dépasse pas ${sectionsMin + 2} sections : au-delà, le document serait coupé avant sa fin.`
       : ''
   }
-DENSITÉ — EXIGENCE FERME : ${wordsPerSection.split(' à ')[0]} mots est un PLANCHER, pas une moyenne. Une section plus courte est considérée comme incomplète et sera rejetée.
-Aucune section ne doit se contenter d'annoncer son objet : chacune énonce des règles concrètes, chiffrées et opposables — conditions de mise en œuvre, délais, seuils, conséquences en cas de manquement.
+DENSITÉ — LONGUEUR TOTALE VISÉE : ${totalVise} mots pour l'ensemble du document.
+Répartis-les selon le poids réel de chaque rubrique, sans jamais remplir pour atteindre un quota :
+- rubriques brèves par nature (dénomination, siège, durée) : 120 à 180 mots suffisent ;
+- rubriques de fond (capital et apports, gérance, décisions collectives, obligations, résiliation, litiges) : 250 à 400 mots, car c'est là que se jouent les droits des parties.
+Aucune section ne doit se contenter d'annoncer son objet : chacune énonce des règles concrètes et opposables — conditions de mise en œuvre, délais, seuils, majorités, conséquences en cas de manquement.
+Tout montant est suivi de sa devise, en chiffres puis en toutes lettres pour les sommes importantes.
 Vérifie chaque nombre écrit en toutes lettres avant de répondre (« quatre-vingt-dix-neuf », jamais « quarante-neuf-dix-neuf ») : une erreur à cet endroit décrédibilise tout le document.
 
 CONSIGNES SPÉCIFIQUES À CE TYPE DE DOCUMENT :
